@@ -1,6 +1,17 @@
 using IconFilers.Infrastructure.DependencyInjection;
+using IconFilers.Infrastructure.Persistence.Entities;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// read connection string from appsettings
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// register DbContext (ensure migrations use Infrastructure assembly)
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString, sql =>
+        sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName))
+);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
