@@ -1,17 +1,17 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using IconFilers.Infrastructure.Persistence.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IconFilers.Infrastructure.DependencyInjection
 {
     public static class InfrastructureServiceRegistration
     {
-        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, string connectionString)
         {
-            // Example: Repository bindings
-            //services.AddScoped<IExampleRepository, ExampleRepository>();
-
-            // Example: DbContext (if using EF Core)
-            // services.AddDbContext<AppDbContext>(options =>
-            //     options.UseSqlServer("YourConnectionString"));
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer(connectionString, sql =>
+                    sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName))
+            );
 
             return services;
         }

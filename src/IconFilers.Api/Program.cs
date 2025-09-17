@@ -7,12 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 // read connection string from appsettings
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// register DbContext (ensure migrations use Infrastructure assembly)
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString, sql =>
-        sql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName))
-);
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -29,7 +23,7 @@ builder.Services.AddSwaggerGen(options =>
     // options.IncludeXmlComments(xmlPath);
 });
 
-builder.Services.AddInfrastructureServices();
+builder.Services.AddInfrastructureServices(connectionString);
 
 var app = builder.Build();
 
