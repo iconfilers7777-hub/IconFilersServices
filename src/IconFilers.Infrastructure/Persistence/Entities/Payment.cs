@@ -7,7 +7,7 @@ public partial class Payment
 {
     public int Id { get; set; }
 
-    public int? ClientId { get; set; }
+    public int ClientId { get; set; }
 
     public decimal Amount { get; set; }
 
@@ -17,13 +17,11 @@ public partial class Payment
 
     public decimal NetAmount { get; set; }
 
-    public int? PaymentModeId { get; set; }
+    public string PaymentMode { get; set; } = null!;
 
     public string Status { get; set; } = null!;
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public virtual Client? Client { get; set; }
-
-    public virtual PaymentMode? PaymentMode { get; set; }
+    public virtual Client Client { get; set; } = null!;
 }

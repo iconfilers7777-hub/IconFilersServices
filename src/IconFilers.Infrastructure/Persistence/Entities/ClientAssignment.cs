@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace IconFilers.Api.Infrastructure.Persistence.Entities;
+namespace IconFilers.Infrastructure.Persistence.Entities;
 
 public partial class ClientAssignment
 {

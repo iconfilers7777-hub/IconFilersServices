@@ -7,13 +7,13 @@ public partial class Invoice
 {
     public Guid Id { get; set; }
 
-    public int? ClientId { get; set; }
+    public int ClientId { get; set; }
+
+    public string Description { get; set; } = null!;
 
     public decimal TotalAmount { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public virtual Client? Client { get; set; }
-
-    public virtual ICollection<InvoiceItem> InvoiceItems { get; set; } = new List<InvoiceItem>();
+    public virtual Client Client { get; set; } = null!;
 }

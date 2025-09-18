@@ -7,15 +7,31 @@ public partial class User
 {
     public Guid Id { get; set; }
 
-    public string Username { get; set; } = null!;
+    public string FirstName { get; set; } = null!;
 
-    public string? Email { get; set; }
+    public string LastName { get; set; } = null!;
 
-    public string? DisplayName { get; set; }
+    public string Email { get; set; } = null!;
 
-    public DateTime? CreatedAt { get; set; }
+    public string Phone { get; set; } = null!;
 
-    public virtual ICollection<ClientDocument> ClientDocuments { get; set; } = new List<ClientDocument>();
+    public string? DeskNumber { get; set; }
 
-    public virtual ICollection<Team> Teams { get; set; } = new List<Team>();
+    public string? WhatsAppNumber { get; set; }
+
+    public string Role { get; set; } = null!;
+
+    public Guid? ReportsTo { get; set; }
+
+    public string? TeamName { get; set; }
+
+    public decimal? TargetAmount { get; set; }
+
+    public decimal? DiscountAmount { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+
+    public virtual ICollection<ClientAssignment> ClientAssignmentAssignedByNavigations { get; set; } = new List<ClientAssignment>();
+
+    public virtual ICollection<ClientAssignment> ClientAssignmentAssignedToNavigations { get; set; } = new List<ClientAssignment>();
 }

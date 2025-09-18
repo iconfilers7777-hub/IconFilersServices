@@ -19,7 +19,9 @@ public partial class Client
 
     public bool IsCompleted { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    public virtual ICollection<ClientAssignment> ClientAssignments { get; set; } = new List<ClientAssignment>();
 
     public virtual ICollection<ClientDocument> ClientDocuments { get; set; } = new List<ClientDocument>();
 
