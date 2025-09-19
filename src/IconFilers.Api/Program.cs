@@ -1,13 +1,23 @@
+﻿using IconFilers.Api.IServices;
+using IconFilers.Api.Services;
 using IconFilers.Infrastructure.DependencyInjection;
 using IconFilers.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+ExcelPackage.License.SetNonCommercialPersonal("Venkatesh");
+
+
+ExcelPackage.License.SetNonCommercialOrganization("IconFilers");
 
 // read connection string from appsettings
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<IClientService,ClientService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
