@@ -18,6 +18,27 @@ namespace IconFilers.Api.Services
             _context = context;
         }
 
+        public async Task<IEnumerable<UploadedClient>> GetExcelUploadedClients()
+        {
+            try
+            {
+                var uploadedClients = await _context.UploadedClients
+                    .FromSqlRaw("EXEC GetUploadedExcelClients")
+                                .AsNoTracking()
+                                .ToListAsync();
+
+                return uploadedClients ?? new List<UploadedClient>();
+            }
+            catch(DBConcurrencyException dbex)
+            {
+                throw dbex;
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         public async Task<int> ImportClientsFromExcelAsync(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -44,8 +65,9 @@ namespace IconFilers.Api.Services
                         {
                             Name = worksheet.Cells[row, 1].Text,
                             Contact = worksheet.Cells[row, 2].Text,
-                            Email = worksheet.Cells[row, 3].Text,
-                            Status = worksheet.Cells[row, 4].Text
+                            Contact2= worksheet.Cells[row,3].Text,
+                            Email = worksheet.Cells[row, 4].Text,
+                            Status = worksheet.Cells[row, 5].Text
                         });
                     }
                 }
@@ -55,12 +77,13 @@ namespace IconFilers.Api.Services
             var dataTable = new DataTable();
             dataTable.Columns.Add("Name", typeof(string));
             dataTable.Columns.Add("Contact", typeof(string));
+            dataTable.Columns.Add("Contact2", typeof(string));
             dataTable.Columns.Add("Email", typeof(string));
             dataTable.Columns.Add("Status", typeof(string));
 
             foreach (var client in clients)
             {
-                dataTable.Rows.Add(client.Name, client.Contact, client.Email, client.Status);
+                dataTable.Rows.Add(client.Name, client.Contact,client.Contact2, client.Email, client.Status);
             }
 
             // Create parameter for TVP

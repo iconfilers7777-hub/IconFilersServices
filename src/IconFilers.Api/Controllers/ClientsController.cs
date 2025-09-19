@@ -30,5 +30,12 @@ namespace IconFilers.Api.Controllers
                 return BadRequest(new { Error = ex.Message });
             }
         }
+
+        [HttpGet("Get-uploaded-clients")]
+        public async Task<IActionResult> GetUploadedClients()
+        {
+            var clients = await _clientService.GetExcelUploadedClients();
+            return Ok(clients);
+        }
     }
 }

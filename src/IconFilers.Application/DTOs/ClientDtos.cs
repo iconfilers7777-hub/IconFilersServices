@@ -5,6 +5,7 @@ namespace IconFilers.Application.DTOs
     {
         public string? Name { get; set; }
         public string? Contact { get; set; }
+        public string? Contact2 { get; set; }
         public string? Email { get; set; }
         public string? Status { get; set; }
     }

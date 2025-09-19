@@ -27,8 +27,13 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public DbSet<UploadedClient> UploadedClients { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<UploadedClient>().HasNoKey();
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<Client>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Clients__3214EC077E72A68C");

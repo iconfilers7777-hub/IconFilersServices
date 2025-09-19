@@ -11,6 +11,8 @@ public partial class Client
 
     public string? Contact { get; set; }
 
+    public string? Contact2 { get; set; }
+
     public string? Email { get; set; }
 
     public string? Address { get; set; }
