@@ -30,9 +30,14 @@ public partial class AppDbContext : DbContext
 
     public DbSet<UploadedClient> UploadedClients { get; set; }
 
+    public DbSet<Roles> Roles { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UploadedClient>().HasNoKey();
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Roles>().HasNoKey();
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Status>(entity =>

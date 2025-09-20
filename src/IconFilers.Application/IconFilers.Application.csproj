@@ -1,11 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\IconFilers.Domain\IconFilers.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="DTOs\" />
   </ItemGroup>
 
   <PropertyGroup>

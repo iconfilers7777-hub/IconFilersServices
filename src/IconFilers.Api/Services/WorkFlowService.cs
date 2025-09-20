@@ -17,34 +17,33 @@ namespace IconFilers.Api.Services
             _context = context;
             _cache = cache;
         }
-        public async Task<ActionResult<IEnumerable<Status>>> GetStatuses()
+        public async Task<ActionResult<IEnumerable<string>>> GetStatuses()
         {
             try
             {
                 const string cacheKey = "StatusesCache";
 
-                if (_cache.TryGetValue(cacheKey, out IEnumerable<Status> cachedStatuses))
+                if (_cache.TryGetValue(cacheKey, out IEnumerable<string> cachedStatusNames))
                 {
-                    return new ActionResult<IEnumerable<Status>>(cachedStatuses);
+                    return new ActionResult<IEnumerable<string>>(cachedStatusNames);
                 }
 
-
                 var statuses = await _context.Statuses
-                    .Where(s => s.IsActive)
-                    .OrderBy(s => s.Category)
-                    .ThenBy(s => s.StatusName)
-                    .ToListAsync();
+                       .FromSqlRaw("EXEC GetClientsStatus")
+                       .AsNoTracking()
+                       .ToListAsync();
 
-                statuses ??= new List<Status>();
+                var statusNames = statuses.Select(s => s.StatusName).ToList();
+
 
                 var cacheOptions = new MemoryCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
                 };
 
-                _cache.Set(cacheKey, statuses, cacheOptions);
+                _cache.Set(cacheKey, statusNames, cacheOptions);
 
-                return new ActionResult<IEnumerable<Status>>(statuses);
+                return new ActionResult<IEnumerable<string>>(statusNames);
             }
             catch (SqlException sqlEx)
             {
@@ -63,5 +62,49 @@ namespace IconFilers.Api.Services
                 throw new Exception("An unexpected error occurred while fetching statuses.", ex);
             }
         }
+        public async Task<IEnumerable<string>> GetRoles()
+        {
+            try
+            {
+                const string cacheKey = "RolesCache";
+
+                if (_cache.TryGetValue(cacheKey, out IEnumerable<string> cachedRoles))
+                {
+                    return cachedRoles;
+                }
+
+                var rolesWithId = await _context.Roles
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var roles = rolesWithId.Select(r => r.Name).ToList();
+
+                var cacheOptions = new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                };
+
+                _cache.Set(cacheKey, roles, cacheOptions);
+
+                return roles;
+            }
+            catch (SqlException sqlEx)
+            {
+                throw new Exception("Database error occurred while fetching roles.", sqlEx);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("A database update error occurred while fetching roles.", dbEx);
+            }
+            catch (DBConcurrencyException dbEx)
+            {
+                throw new Exception("A concurrency error occurred while fetching roles.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An unexpected error occurred while fetching roles.", ex);
+            }
+        }
+
     }
 }

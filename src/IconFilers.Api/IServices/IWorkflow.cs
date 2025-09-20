@@ -5,6 +5,8 @@ namespace IconFilers.Api.IServices
 {
     public interface IWorkflow
     {
-        Task<ActionResult<IEnumerable<Status>>> GetStatuses();
+        Task<ActionResult<IEnumerable<string>>> GetStatuses();
+
+        Task<IEnumerable<string>> GetRoles();
     }
 }
