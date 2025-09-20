@@ -26,6 +26,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Payment> Payments { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
+    public DbSet<Status> Statuses { get; set; }
 
     public DbSet<UploadedClient> UploadedClients { get; set; }
 
@@ -33,6 +34,17 @@ public partial class AppDbContext : DbContext
     {
         modelBuilder.Entity<UploadedClient>().HasNoKey();
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Status>(entity =>
+        {
+            entity.ToTable("Status");
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.Category).IsRequired().HasMaxLength(100);
+            entity.Property(s => s.StatusName).IsRequired().HasMaxLength(100);
+            entity.Property(s => s.IsActive).IsRequired();
+            entity.Property(s => s.CreatedDate).IsRequired();
+            entity.Property(s => s.ModifiedDate).IsRequired();
+        });
 
         modelBuilder.Entity<Client>(entity =>
         {

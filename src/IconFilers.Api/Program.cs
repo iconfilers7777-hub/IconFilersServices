@@ -17,7 +17,9 @@ ExcelPackage.License.SetNonCommercialOrganization("IconFilers");
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IClientService,ClientService>();
+builder.Services.AddScoped<IWorkflow,WorkFlowService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {

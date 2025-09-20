@@ -34,8 +34,15 @@ namespace IconFilers.Api.Controllers
         [HttpGet("Get-uploaded-clients")]
         public async Task<IActionResult> GetUploadedClients()
         {
-            var clients = await _clientService.GetExcelUploadedClients();
-            return Ok(clients);
+            try
+            {
+                var clients = await _clientService.GetExcelUploadedClients();
+                return Ok(clients);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
         }
     }
 }
