@@ -20,6 +20,9 @@ builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IClientService,ClientService>();
 builder.Services.AddScoped<IWorkflow,WorkFlowService>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(EfRepository<>));
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
