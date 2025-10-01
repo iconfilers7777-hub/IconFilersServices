@@ -41,6 +41,7 @@ namespace IconFilers.Api.Services
                 FirstName = dto.FirstName?.Trim() ?? string.Empty,
                 LastName = dto.LastName?.Trim() ?? string.Empty,
                 Email = dto.Email?.Trim() ?? string.Empty,
+                Password= dto.Password ?? string.Empty,
                 Phone = dto.Phone?.Trim() ?? string.Empty,
                 DeskNumber = dto.DeskNumber?.Trim(),
                 WhatsAppNumber = dto.WhatsAppNumber?.Trim(),

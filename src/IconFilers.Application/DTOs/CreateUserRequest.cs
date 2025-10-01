@@ -12,6 +12,10 @@ namespace IconFilers.Application.DTOs
         [Required] public string FirstName { get; set; } = null!;
         [Required] public string LastName { get; set; } = null!;
         [Required][EmailAddress] public string Email { get; set; } = null!;
+
+        [Required(ErrorMessage = "Password is required")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = null!;
         [Required] public string Phone { get; set; } = null!;
         public string? DeskNumber { get; set; }
         public string? WhatsAppNumber { get; set; }

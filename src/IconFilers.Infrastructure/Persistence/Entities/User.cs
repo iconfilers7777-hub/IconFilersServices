@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace IconFilers.Infrastructure.Persistence.Entities;
 
@@ -13,6 +14,9 @@ public partial class User
 
     public string Email { get; set; } = null!;
 
+    [Required(ErrorMessage = "Password is required")]
+    [DataType(DataType.Password)]
+    public string Password { get; set; } = null!;
     public string Phone { get; set; } = null!;
 
     public string? DeskNumber { get; set; }

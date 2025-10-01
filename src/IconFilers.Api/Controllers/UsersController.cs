@@ -47,7 +47,7 @@ namespace IconFilers.Api.Controllers
         /// <summary>
         /// Create a new user.
         /// </summary>
-        [HttpPost]
+        [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody] CreateUserRequest request, CancellationToken ct)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);

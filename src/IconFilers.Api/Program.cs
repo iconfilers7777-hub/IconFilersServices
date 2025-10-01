@@ -4,6 +4,7 @@ using IconFilers.Infrastructure.DependencyInjection;
 using IconFilers.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,11 +17,15 @@ ExcelPackage.License.SetNonCommercialOrganization("IconFilers");
 // read connection string from appsettings
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+var keyBytes = RandomNumberGenerator.GetBytes(32); // 256 bits
+var secretKey = Convert.ToBase64String(keyBytes);
+
 builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IClientService,ClientService>();
 builder.Services.AddScoped<IWorkflow,WorkFlowService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(EfRepository<>));
+builder.Services.AddSingleton<IJwtService>(new JwtService(secretKey));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddEndpointsApiExplorer();
