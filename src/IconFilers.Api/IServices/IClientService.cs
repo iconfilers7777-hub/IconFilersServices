@@ -8,5 +8,7 @@ namespace IconFilers.Api.IServices
         Task<int> ImportClientsFromExcelAsync(IFormFile file);
 
         Task<IEnumerable<UploadedClient>> GetExcelUploadedClients();
+
+        Task<IEnumerable<UploadedClient>> SearchClientsByLetters(dynamic SearchCriteria);
     }
 }

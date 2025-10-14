@@ -139,5 +139,35 @@ namespace IconFilers.Api.Services
             }
         }
 
+        public async Task<IEnumerable<UploadedClient>> SearchClientsByLetters(dynamic searchCriteria)
+        {
+            try
+            {
+                string searchText = searchCriteria?.SearchCriteria?.ToString();
+                var param = new SqlParameter("@SearchCriteria", searchText ?? (object)DBNull.Value);
+
+                var uploadedClients = await _context.UploadedClients
+                    .FromSqlRaw("EXEC GetSearchUploadedClients @SearchCriteria", param)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                return uploadedClients;
+            }
+            catch (SqlException sqlEx)
+            {
+                throw new Exception("Database error occurred while searching clients.", sqlEx);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("A database update error occurred while searching clients.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An unexpected error occurred while searching clients.", ex);
+            }
+        }
+
+
+
     }
 }

@@ -44,5 +44,19 @@ namespace IconFilers.Api.Controllers
                 return BadRequest(new { Error = ex.Message });
             }
         }
+
+        [HttpGet("Searchclients")]
+        public async Task<IActionResult> SearchUploadedClients([FromBody] dynamic SearchCriteria)
+        {
+            try
+            {
+                var clients = await _clientService.SearchClientsByLetters(SearchCriteria);
+                return Ok(clients);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
     }
 }
