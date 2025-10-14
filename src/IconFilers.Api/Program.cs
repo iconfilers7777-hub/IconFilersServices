@@ -28,6 +28,8 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(EfRepository<>))
 builder.Services.AddSingleton<IJwtService>(new JwtService(secretKey));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IManageTeamsService, ManageTeamsService>();
+builder.Services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {

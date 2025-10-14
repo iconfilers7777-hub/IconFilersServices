@@ -91,5 +91,11 @@ namespace IconFilers.Api.Services
             _db.Set<T>().Update(entity);
             await _db.SaveChangesAsync(ct);
         }
+
+        public async Task UpdateRangeAsync(IEnumerable<T> entities, CancellationToken ct = default)
+        {
+            _db.Set<T>().UpdateRange(entities);
+            await _db.SaveChangesAsync(ct);
+        }
     }
 }
