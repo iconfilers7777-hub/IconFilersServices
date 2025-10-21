@@ -167,6 +167,38 @@ namespace IconFilers.Api.Services
             }
         }
 
+        public async Task<string> ClientSignUp(ClientSignUpDTO client)
+        {
+            try
+            {
+                var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == client.Email);
+                if (existingUser != null)
+                {
+                    return "Email already exists";
+                }
+
+                var newUser = new User
+                {
+                    FirstName = client.FirstName,
+                    LastName = client.LastName,
+                    Email = client.Email,
+                    Password = client.Password, 
+                    Phone = client.PhoneNumber,
+                    WhatsAppNumber = client.AlternatePhoneNumber,
+                    Role = "Client",
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Users.Add(newUser);
+                await _context.SaveChangesAsync();
+
+                return "Client registered successfully";
+            }
+            catch (Exception ex)
+            {
+                return "Error: " + ex.Message;
+            }
+        }
 
 
     }

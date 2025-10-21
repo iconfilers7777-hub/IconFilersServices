@@ -10,5 +10,7 @@ namespace IconFilers.Api.IServices
         Task<IEnumerable<UploadedClient>> GetExcelUploadedClients();
 
         Task<IEnumerable<UploadedClient>> SearchClientsByLetters(dynamic SearchCriteria);
+
+        Task<string> ClientSignUp(ClientSignUpDTO client);
     }
 }

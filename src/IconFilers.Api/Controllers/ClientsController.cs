@@ -1,4 +1,5 @@
 ﻿using IconFilers.Api.IServices;
+using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -58,5 +59,12 @@ namespace IconFilers.Api.Controllers
                 return BadRequest(new { Error = ex.Message });
             }
         }
+        [HttpPost("client-signup")]
+        public async Task<IActionResult> ClientSignUp([FromBody] ClientSignUpDTO client)
+        {
+            var result = await _clientService.ClientSignUp(client);
+            return Ok(new { message = result });
+        }
+
     }
 }

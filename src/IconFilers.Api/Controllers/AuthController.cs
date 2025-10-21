@@ -28,7 +28,18 @@ namespace IconFilers.Api.Controllers
                 return Unauthorized(new { message = "Invalid email or password" });
 
             var token = _jwtService.GenerateToken(user.Email, user.Role);
-            return Ok(new { token });
+            return Ok(new
+            {
+                token,
+                user = new
+                {
+                    user.Id,
+                    user.FirstName,
+                    user.LastName,
+                    user.Email,
+                    user.Role
+                }
+            });
         }
     }
 }
