@@ -1,5 +1,6 @@
 ﻿using IconFilers.Api.IServices;
 using IconFilers.Application.DTOs;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IconFilers.Api.Controllers
@@ -45,13 +46,6 @@ namespace IconFilers.Api.Controllers
             }
         }
 
-        // -----------------------
-        // New endpoints
-        // -----------------------
-
-        /// <summary>
-        /// Add a single client.
-        /// </summary>
         [HttpPost]
         [Route("")]
         [ProducesResponseType(StatusCodes.Status201Created)]

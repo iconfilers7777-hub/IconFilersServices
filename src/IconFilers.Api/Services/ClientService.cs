@@ -280,5 +280,67 @@ namespace IconFilers.Api.Services
         }
 
         #endregion
+        public async Task<IEnumerable<UploadedClient>> SearchClientsByLetters(dynamic searchCriteria)
+        {
+            try
+            {
+                string searchText = searchCriteria?.SearchCriteria?.ToString();
+                var param = new SqlParameter("@SearchCriteria", searchText ?? (object)DBNull.Value);
+
+                var uploadedClients = await _context.UploadedClients
+                    .FromSqlRaw("EXEC GetSearchUploadedClients @SearchCriteria", param)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                return uploadedClients;
+            }
+            catch (SqlException sqlEx)
+            {
+                throw new Exception("Database error occurred while searching clients.", sqlEx);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("A database update error occurred while searching clients.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An unexpected error occurred while searching clients.", ex);
+            }
+        }
+
+        public async Task<string> ClientSignUp(ClientSignUpDTO client)
+        {
+            try
+            {
+                var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == client.Email);
+                if (existingUser != null)
+                {
+                    return "Email already exists";
+                }
+
+                var newUser = new User
+                {
+                    FirstName = client.FirstName,
+                    LastName = client.LastName,
+                    Email = client.Email,
+                    Password = client.Password, 
+                    Phone = client.PhoneNumber,
+                    WhatsAppNumber = client.AlternatePhoneNumber,
+                    Role = "Client",
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Users.Add(newUser);
+                await _context.SaveChangesAsync();
+
+                return "Client registered successfully";
+            }
+            catch (Exception ex)
+            {
+                return "Error: " + ex.Message;
+            }
+        }
+
+
     }
 }
