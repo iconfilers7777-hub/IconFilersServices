@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using OfficeOpenXml;
 using System.Data;
+using System.Text.RegularExpressions;
 
 
 namespace IconFilers.Api.Services
@@ -139,5 +140,145 @@ namespace IconFilers.Api.Services
             }
         }
 
+        public async Task<int> AddClientAsync(ClientDto dto)
+        {
+            try
+            {
+                if (dto == null)
+                    throw new ArgumentNullException(nameof(dto));
+
+                // Basic normalization/validation
+                dto.Name = string.IsNullOrWhiteSpace(dto.Name) ? null : dto.Name.Trim();
+                dto.Contact = string.IsNullOrWhiteSpace(dto.Contact) ? null : dto.Contact.Trim();
+                dto.Contact2 = string.IsNullOrWhiteSpace(dto.Contact2) ? null : dto.Contact2.Trim();
+                dto.Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim().ToLowerInvariant();
+                dto.Status = string.IsNullOrWhiteSpace(dto.Status) ? "Active" : dto.Status.Trim();
+
+                // Optionally avoid duplicates by email or primary contact
+                bool exists = await _context.Set<Client>()
+                    .AnyAsync(c => (dto.Email != null && c.Email == dto.Email)
+                                   || (dto.Contact != null && c.Contact == dto.Contact));
+                if (exists)
+                    throw new InvalidOperationException("A client with the same email or contact already exists.");
+
+                var entity = MapToEntity(dto);
+                entity.CreatedAt = DateTime.UtcNow;
+
+                _context.Set<Client>().Add(entity);
+                await _context.SaveChangesAsync();
+
+                // Invalidate / refresh related caches if needed
+                _cache.Remove("ClientsCache");
+                _cache.Remove("UploadedClientsCache");
+
+                return entity.Id;
+            }
+            catch (SqlException sqlEx)
+            {
+                throw new Exception("Database error occurred while adding a client.", sqlEx);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("A database update error occurred while adding a client.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An unexpected error occurred while adding a client.", ex);
+            }
+        }
+
+        public async Task<IEnumerable<ClientDto>> GetClientsAsync(int page = 1, int pageSize = 50)
+        {
+            try
+            {
+                if (page <= 0) page = 1;
+                if (pageSize <= 0 || pageSize > 500) pageSize = 50;
+
+                var query = _context.Set<Client>().AsNoTracking()
+                    .OrderByDescending(c => c.CreatedAt)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize);
+
+                var list = await query.ToListAsync();
+                return list.Select(MapToDto);
+            }
+            catch (SqlException sqlEx)
+            {
+                throw new Exception("Database error occurred while fetching clients.", sqlEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An unexpected error occurred while fetching clients.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Search clients by name, email or contact. Case-insensitive and partial match.
+        /// </summary>
+        public async Task<IEnumerable<ClientDto>> SearchClientsAsync(string query, int maxResults = 100)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(query))
+                    return Enumerable.Empty<ClientDto>();
+
+                query = query.Trim();
+
+                // escape SQL wildcard characters for safe LIKE usage
+                string EscapeLike(string s) => Regex.Replace(s, @"[%_\[\]]", m => $"[{m.Value}]");
+
+                var safe = EscapeLike(query);
+                // Use EF.Functions.Like for a SQL server friendly, case-insensitive (depending on collation) search
+                var q = _context.Set<Client>().AsNoTracking()
+                    .Where(c =>
+                        EF.Functions.Like(c.Name, $"%{safe}%") ||
+                        EF.Functions.Like(c.Email, $"%{safe}%") ||
+                        EF.Functions.Like(c.Contact, $"%{safe}%") ||
+                        EF.Functions.Like(c.Contact2, $"%{safe}%") ||
+                        EF.Functions.Like(c.Status, $"%{safe}%"))
+                    .OrderByDescending(c => c.CreatedAt)
+                    .Take(Math.Max(1, Math.Min(maxResults, 1000)));
+
+                var results = await q.ToListAsync();
+                return results.Select(MapToDto);
+            }
+            catch (SqlException sqlEx)
+            {
+                throw new Exception("Database error occurred while searching clients.", sqlEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An unexpected error occurred while searching clients.", ex);
+            }
+        }
+
+        #region Mappers
+
+        private static ClientDto MapToDto(Client c)
+        {
+            if (c == null) return null!;
+            return new ClientDto
+            {
+                Name = c.Name,
+                Contact = c.Contact,
+                Contact2 = c.Contact2,
+                Email = c.Email,
+                Status = c.Status
+            };
+        }
+
+        private static Client MapToEntity(ClientDto dto)
+        {
+            return new Client
+            {
+                Name = dto.Name,
+                Contact = dto.Contact,
+                Contact2 = dto.Contact2,
+                Email = dto.Email,
+                Status = dto.Status
+            };
+        }
+
+        #endregion
     }
 }

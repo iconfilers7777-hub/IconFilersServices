@@ -1,5 +1,5 @@
 ﻿using IconFilers.Api.IServices;
-using Microsoft.AspNetCore.Http;
+using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IconFilers.Api.Controllers
@@ -38,6 +38,93 @@ namespace IconFilers.Api.Controllers
             {
                 var clients = await _clientService.GetExcelUploadedClients();
                 return Ok(clients);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        // -----------------------
+        // New endpoints
+        // -----------------------
+
+        /// <summary>
+        /// Add a single client.
+        /// </summary>
+        [HttpPost]
+        [Route("")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> AddClient([FromBody] ClientDto dto)
+        {
+            try
+            {
+                if (dto == null)
+                    return BadRequest(new { Error = "Client payload is required." });
+
+                if (!ModelState.IsValid)
+                    return BadRequest(new { Error = "Invalid client payload.", Details = ModelState });
+
+                // AddClientAsync returns the new entity id (per service contract)
+                var newId = await _clientService.AddClientAsync(dto);
+
+                // Return created with id in body; if you implement GetById you can use CreatedAtAction
+                return StatusCode(StatusCodes.Status201Created, new { Message = "Client created.", Id = newId });
+            }
+            catch (InvalidOperationException invEx)
+            {
+                // for duplicates or domain-level invalid states thrown by service
+                return BadRequest(new { Error = invEx.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get clients with optional paging.
+        /// GET api/clients?page=1&pageSize=50
+        /// </summary>
+        [HttpGet]
+        [Route("")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetClients([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        {
+            try
+            {
+                if (page <= 0 || pageSize <= 0)
+                    return BadRequest(new { Error = "Page and pageSize must be greater than zero." });
+
+                var clients = await _clientService.GetClientsAsync(page, pageSize);
+                return Ok(clients);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Search clients by name/email/contact/status.
+        /// GET api/clients/search?q=abc&maxResults=100
+        /// </summary>
+        [HttpGet("search")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SearchClients([FromQuery(Name = "q")] string query, [FromQuery] int maxResults = 100)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(query))
+                    return BadRequest(new { Error = "Query parameter 'q' is required." });
+
+                if (maxResults <= 0) maxResults = 100;
+
+                var results = await _clientService.SearchClientsAsync(query, maxResults);
+                return Ok(results);
             }
             catch (Exception ex)
             {
