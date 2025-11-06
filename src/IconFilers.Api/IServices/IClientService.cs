@@ -13,7 +13,7 @@ namespace IconFilers.Api.IServices
         Task<IEnumerable<ClientDto>> GetClientsAsync(int page = 1, int pageSize = 50);
         Task<IEnumerable<ClientDto>> SearchClientsAsync(string query, int maxResults = 100);
 
-        Task<IEnumerable<UploadedClient>> SearchClientsByLetters(dynamic SearchCriteria);
+        Task<IEnumerable<UploadedClient>> SearchClientsByLetters(string searchText);
 
         Task<string> ClientSignUp(ClientSignUpDTO client);
     }

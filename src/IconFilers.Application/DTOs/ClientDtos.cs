@@ -9,6 +9,10 @@ namespace IconFilers.Application.DTOs
         public string? Email { get; set; }
         public string? Status { get; set; }
     }
+    public class SearchRequest
+    {
+        public string SearchText { get; set; }
+    }
     //public record CreateClientDto(string? FirstName = null, string? LastName = null, string? BusinessName = null, string? Email = null, string? Phone = null, int? AssignedTeamId = null, Guid? AssignedUserId = null);
     //public record UpdateClientDto(int Id, string? Email = null, string? Phone = null, string? Status = null, string? Address = null, DateTime? Dob = null);
 }
