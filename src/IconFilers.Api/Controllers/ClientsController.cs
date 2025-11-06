@@ -125,5 +125,23 @@ namespace IconFilers.Api.Controllers
                 return BadRequest(new { Error = ex.Message });
             }
         }
+
+        [HttpGet("SearchByLetters")]
+        public async Task<IActionResult> SearchClientsByLetters([FromBody] SearchRequest request)
+        {
+            try
+            {
+                var results = await _clientService.SearchClientsByLetters(request.SearchText);
+                return Ok(results);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+       
+
+
     }
 }
