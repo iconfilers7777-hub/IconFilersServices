@@ -1,4 +1,5 @@
-﻿using IconFilers.Api.IServices;
+﻿using Azure.Core;
+using IconFilers.Api.IServices;
 using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -108,21 +109,16 @@ namespace IconFilers.Api.Controllers
         [HttpGet("search")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> SearchClients([FromQuery(Name = "q")] string query, [FromQuery] int maxResults = 100)
+        public async Task<IActionResult> SearchClients([FromBody] SearchRequest request)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(query))
-                    return BadRequest(new { Error = "Query parameter 'q' is required." });
-
-                if (maxResults <= 0) maxResults = 100;
-
-                var results = await _clientService.SearchClientsAsync(query, maxResults);
+                var results = await _clientService.SearchClientsByLetters(request.SearchText);
                 return Ok(results);
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Error = ex.Message });
+                return BadRequest(ex.Message);
             }
         }
 
