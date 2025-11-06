@@ -106,54 +106,54 @@ namespace IconFilers.Api.Services
         public async Task AssignUserToTeamAsync(AssignUserToTeamRequest request, CancellationToken ct = default)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
-            if (string.IsNullOrWhiteSpace(request.TeamName)) throw new ArgumentException("TeamName required.", nameof(request.TeamName));
+            if (string.IsNullOrWhiteSpace(request.TeamName))
+                throw new ArgumentException("TeamName required.", nameof(request.TeamName));
+
             ct.ThrowIfCancellationRequested();
 
-            // load user to assign
+            // Load user to assign
             var user = await _userGenericRepository.GetByIdAsync(new object[] { request.UserId }, ct);
-            if (user == null) throw new ArgumentException("User not found.", nameof(request.UserId));
+            if (user == null)
+                throw new ArgumentException("User not found.", nameof(request.UserId));
 
-            // Prevent assigning a user who already belongs to another team.
-            // Allow if user.TeamName is null (not assigned) OR equals the requested team (case-insensitive).
-            if (!string.IsNullOrWhiteSpace(user.TeamName)
-                && !string.Equals(user.TeamName, request.TeamName, StringComparison.OrdinalIgnoreCase))
+            // 🚫 Strict Rule: user cannot be reassigned here if already in a different team
+            if (!string.IsNullOrWhiteSpace(user.TeamName) &&
+                !string.Equals(user.TeamName, request.TeamName, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidOperationException(
-                    $"User (id={user.Id}) is already assigned to team '{user.TeamName}'. " +
-                    "Remove the user from the current team or use the explicit reassignment API to move them to another team.");
+                    $"User '{user.FirstName} {user.LastName}' is already assigned to team '{user.TeamName}'. " +
+                    "You must use the ReassignUserToTeam API to move this user to another team.");
             }
 
-            // If caller explicitly provided ReportsToManagerId, validate it is a member of the same team.
-            if (request.ReportsToManagerId != null)
+            // If user is already in this team, allow manager change within same team
+            if (string.Equals(user.TeamName, request.TeamName, StringComparison.OrdinalIgnoreCase))
             {
-                var managerCandidate = await _userGenericRepository.GetByIdAsync(new object[] { request.ReportsToManagerId.Value }, ct);
-                if (managerCandidate == null) throw new ArgumentException("Specified manager user not found.", nameof(request.ReportsToManagerId));
-
-                if (!string.Equals(managerCandidate.TeamName ?? string.Empty, request.TeamName ?? string.Empty, StringComparison.OrdinalIgnoreCase))
+                if (request.ReportsToManagerId != null)
                 {
-                    throw new InvalidOperationException($"Specified manager (id={managerCandidate.Id}) is not a member of team '{request.TeamName}'.");
+                    var newManager = await _userGenericRepository.GetByIdAsync(new object[] { request.ReportsToManagerId.Value }, ct);
+                    if (newManager == null)
+                        throw new ArgumentException("Specified manager not found.", nameof(request.ReportsToManagerId));
+
+                    if (!string.Equals(newManager.TeamName ?? string.Empty, request.TeamName, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidOperationException("Specified manager is not part of this team.");
+
+                    user.ReportsTo = request.ReportsToManagerId;
+                    await _userGenericRepository.UpdateAsync(user, ct);
                 }
 
-                // assign user to team and set ReportsTo to the specified manager
-                user.TeamName = request.TeamName;
-                user.ReportsTo = request.ReportsToManagerId;
-                await _userGenericRepository.UpdateAsync(user, ct);
-                return;
+                return; // nothing else to do
             }
 
-            // No explicit manager id provided — resolve manager from the team by TeamName.
-            // Find members of the team and pick the one with ReportsTo == null (the manager).
-            var members = (await _userRepository.GetByTeamAsync(request.TeamName, ct)).ToList();
-
-            // If a manager exists (ReportsTo == null), set ReportsTo = manager.Id.
-            // If no manager exists, set ReportsTo = null (assigned user becomes the manager).
-            var manager = members.FirstOrDefault(m => m.ReportsTo == null);
+            // Normal assignment (user not in any team yet)
+            var teamMembers = (await _userRepository.GetByTeamAsync(request.TeamName, ct)).ToList();
+            var teamManager = teamMembers.FirstOrDefault(m => m.ReportsTo == null);
 
             user.TeamName = request.TeamName;
-            user.ReportsTo = manager?.Id; // null if no manager found
+            user.ReportsTo = teamManager?.Id; // null if no manager found
 
             await _userGenericRepository.UpdateAsync(user, ct);
         }
+
 
 
 
