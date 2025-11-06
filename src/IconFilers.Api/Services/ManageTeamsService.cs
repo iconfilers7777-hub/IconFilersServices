@@ -113,6 +113,16 @@ namespace IconFilers.Api.Services
             var user = await _userGenericRepository.GetByIdAsync(new object[] { request.UserId }, ct);
             if (user == null) throw new ArgumentException("User not found.", nameof(request.UserId));
 
+            // Prevent assigning a user who already belongs to another team.
+            // Allow if user.TeamName is null (not assigned) OR equals the requested team (case-insensitive).
+            if (!string.IsNullOrWhiteSpace(user.TeamName)
+                && !string.Equals(user.TeamName, request.TeamName, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    $"User (id={user.Id}) is already assigned to team '{user.TeamName}'. " +
+                    "Remove the user from the current team or use the explicit reassignment API to move them to another team.");
+            }
+
             // If caller explicitly provided ReportsToManagerId, validate it is a member of the same team.
             if (request.ReportsToManagerId != null)
             {
@@ -144,6 +154,7 @@ namespace IconFilers.Api.Services
 
             await _userGenericRepository.UpdateAsync(user, ct);
         }
+
 
 
         public async Task RemoveUserFromTeamAsync(Guid userId, CancellationToken ct = default)
