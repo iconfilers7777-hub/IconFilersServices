@@ -109,25 +109,42 @@ namespace IconFilers.Api.Services
             if (string.IsNullOrWhiteSpace(request.TeamName)) throw new ArgumentException("TeamName required.", nameof(request.TeamName));
             ct.ThrowIfCancellationRequested();
 
+            // load user to assign
             var user = await _userGenericRepository.GetByIdAsync(new object[] { request.UserId }, ct);
             if (user == null) throw new ArgumentException("User not found.", nameof(request.UserId));
 
+            // If caller explicitly provided ReportsToManagerId, validate it is a member of the same team.
             if (request.ReportsToManagerId != null)
             {
-                var manager = await _userGenericRepository.GetByIdAsync(new object[] { request.ReportsToManagerId.Value }, ct);
-                if (manager == null) throw new ArgumentException("Manager user not found.", nameof(request.ReportsToManagerId));
+                var managerCandidate = await _userGenericRepository.GetByIdAsync(new object[] { request.ReportsToManagerId.Value }, ct);
+                if (managerCandidate == null) throw new ArgumentException("Specified manager user not found.", nameof(request.ReportsToManagerId));
 
-                if (!string.Equals(manager.TeamName ?? string.Empty, request.TeamName ?? string.Empty, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(managerCandidate.TeamName ?? string.Empty, request.TeamName ?? string.Empty, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException($"Specified manager (id={manager.Id}) is not a member of team '{request.TeamName}'.");
+                    throw new InvalidOperationException($"Specified manager (id={managerCandidate.Id}) is not a member of team '{request.TeamName}'.");
                 }
+
+                // assign user to team and set ReportsTo to the specified manager
+                user.TeamName = request.TeamName;
+                user.ReportsTo = request.ReportsToManagerId;
+                await _userGenericRepository.UpdateAsync(user, ct);
+                return;
             }
 
+            // No explicit manager id provided — resolve manager from the team by TeamName.
+            // Find members of the team and pick the one with ReportsTo == null (the manager).
+            var members = (await _userRepository.GetByTeamAsync(request.TeamName, ct)).ToList();
+
+            // If a manager exists (ReportsTo == null), set ReportsTo = manager.Id.
+            // If no manager exists, set ReportsTo = null (assigned user becomes the manager).
+            var manager = members.FirstOrDefault(m => m.ReportsTo == null);
+
             user.TeamName = request.TeamName;
-            user.ReportsTo = request.ReportsToManagerId;
+            user.ReportsTo = manager?.Id; // null if no manager found
 
             await _userGenericRepository.UpdateAsync(user, ct);
         }
+
 
         public async Task RemoveUserFromTeamAsync(Guid userId, CancellationToken ct = default)
         {
