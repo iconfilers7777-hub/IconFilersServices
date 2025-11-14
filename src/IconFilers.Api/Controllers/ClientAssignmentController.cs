@@ -18,7 +18,7 @@ namespace IconFilers.Api.Controllers
         /// <summary>
         /// Get all client assignments
         /// </summary>
-        [HttpGet]
+        [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<ClientAssignmentDto>>> GetAll()
         {
             var assignments = await _service.GetAllAsync();
@@ -28,13 +28,14 @@ namespace IconFilers.Api.Controllers
         /// <summary>
         /// Get a client assignment by id
         /// </summary>
-        [HttpGet("{id:int}", Name = nameof(GetById))]
+        [HttpGet("GetById")]
         public async Task<ActionResult<ClientAssignmentDto>> GetById(int id)
         {
             var assignment = await _service.GetByIdAsync(id);
             if (assignment == null) return NotFound();
             return Ok(assignment);
         }
+
 
         /// <summary>
         /// Get assignments for a specific client
@@ -64,7 +65,8 @@ namespace IconFilers.Api.Controllers
         /// <summary>
         /// Update an existing client assignment
         /// </summary>
-        [HttpPut("{id:int}")]
+        [HttpPut("{id}")]
+        [Route("update/{id}")]
         public async Task<ActionResult<ClientAssignmentDto>> Update(int id, [FromBody] UpdateClientAssignmentDto dto)
         {
             if (dto == null) return BadRequest();
@@ -74,6 +76,7 @@ namespace IconFilers.Api.Controllers
 
             return Ok(updated);
         }
+
 
         /// <summary>
         /// Delete a client assignment
