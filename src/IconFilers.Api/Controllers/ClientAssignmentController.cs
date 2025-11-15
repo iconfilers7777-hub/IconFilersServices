@@ -1,6 +1,8 @@
 ﻿using IconFilers.Api.IServices;
 using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace IconFilers.Api.Controllers
 {
@@ -28,14 +30,13 @@ namespace IconFilers.Api.Controllers
         /// <summary>
         /// Get a client assignment by id
         /// </summary>
-        [HttpGet("GetById")]
+        [HttpGet("GetById/{id}", Name = "GetClientAssignmentById")]
         public async Task<ActionResult<ClientAssignmentDto>> GetById(int id)
         {
             var assignment = await _service.GetByIdAsync(id);
             if (assignment == null) return NotFound();
             return Ok(assignment);
         }
-
 
         /// <summary>
         /// Get assignments for a specific client
@@ -57,16 +58,17 @@ namespace IconFilers.Api.Controllers
 
             var created = await _service.AddAsync(dto);
 
-            // If your service sets the Id on the entity, created.Id will be usable here.
-            // If not, consider refetching by returned values or change service to return created resource with Id.
-            return CreatedAtRoute(nameof(GetById), new { id = created.Id }, created);
+            if (created == null)
+                return BadRequest("Could not create assignment.");
+
+            // Use CreatedAtAction which references the action method by name.
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         /// <summary>
         /// Update an existing client assignment
         /// </summary>
-        [HttpPut("{id}")]
-        [Route("update/{id}")]
+        [HttpPut("update/{id}")]
         public async Task<ActionResult<ClientAssignmentDto>> Update(int id, [FromBody] UpdateClientAssignmentDto dto)
         {
             if (dto == null) return BadRequest();
@@ -76,7 +78,6 @@ namespace IconFilers.Api.Controllers
 
             return Ok(updated);
         }
-
 
         /// <summary>
         /// Delete a client assignment
