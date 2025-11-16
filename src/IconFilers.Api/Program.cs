@@ -31,6 +31,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IManageTeamsService, ManageTeamsService>();
 builder.Services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
+builder.Services.AddScoped<IClientDocumentService, ClientDocumentService>();
+
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -73,5 +75,6 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 
 app.UseAuthorization();
+app.UseStaticFiles(); // serve files from wwwroot
 app.MapControllers();
 app.Run();

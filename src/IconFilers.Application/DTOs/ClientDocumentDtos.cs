@@ -1,5 +1,10 @@
 // IconFilers.Application/DTOs/ClientDocumentDtos.cs
 namespace IconFilers.Application.DTOs;
-
-public record ClientDocumentDto(int Id, int ClientId, string Filename, string? Mime, string? StoragePath, Guid? UploadedBy, DateTime UploadedAt);
-public record CreateClientDocumentDto(int ClientId, string Filename, string? Mime, string? StoragePath, Guid? UploadedBy);
+public class ClientDocumentDto
+{
+    public int Id { get; set; }
+    public int ClientId { get; set; }
+    public string DocumentType { get; set; } = null!;
+    public string FilePath { get; set; } = null!;
+    public DateTime UploadedAt { get; set; }
+}
