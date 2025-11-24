@@ -51,19 +51,20 @@ namespace IconFilers.Api.Controllers
         /// <summary>
         /// Create a new client assignment
         /// </summary>
-        [HttpPost]
-        public async Task<ActionResult<ClientAssignmentDto>> Create([FromBody] CreateClientAssignmentDto dto)
+        [HttpPost("Create")]
+        public async Task<ActionResult<int>> Create([FromBody] ClientDto1 dto)
         {
-            if (dto == null) return BadRequest();
+            if (dto == null)
+                return BadRequest();
 
-            var created = await _service.AddAsync(dto);
+            var insertedId = await _service.AddAsync(dto);
 
-            if (created == null)
+            if (insertedId <= 0)
                 return BadRequest("Could not create assignment.");
 
-            // Use CreatedAtAction which references the action method by name.
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            return CreatedAtAction(nameof(GetById), new { id = insertedId }, insertedId);
         }
+
 
         /// <summary>
         /// Update an existing client assignment

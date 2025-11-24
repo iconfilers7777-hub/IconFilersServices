@@ -1,16 +1,21 @@
 ﻿using IconFilers.Api.IServices;
 using IconFilers.Application.DTOs;
 using IconFilers.Infrastructure.Persistence.Entities;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace IconFilers.Api.Services;
 
 public class ClientAssignmentService : IClientAssignmentService
 {
     private readonly IGenericRepository<ClientAssignment> _repository;
-
-    public ClientAssignmentService(IGenericRepository<ClientAssignment> repository)
+    private readonly AppDbContext _context;
+   
+    public ClientAssignmentService(IGenericRepository<ClientAssignment> repository, AppDbContext context)
     {
         _repository = repository;
+        _context = context;
     }
 
     public async Task<IEnumerable<ClientAssignmentDto>> GetAllAsync(CancellationToken ct = default)
@@ -54,24 +59,24 @@ public class ClientAssignmentService : IClientAssignmentService
         return entities.Select(MapToDto);
     }
 
-    public async Task<ClientAssignmentDto> AddAsync(CreateClientAssignmentDto dto, CancellationToken ct = default)
+    public async Task<int> AddAsync(ClientDto1 dto, CancellationToken ct = default)
     {
-        var entity = new ClientAssignment
-        {
-            ClientId = dto.ClientId,
-            AssignedTo = dto.AssignedTo,
-            AssignedBy = dto.AssignedBy,
-            RoleAtAssignment = dto.RoleAtAssignment,
-            AssignedAt = DateTime.UtcNow,
-            Status = dto.Status,
-            Notes = dto.Notes
-        };
+        var rowsAffected = await _context.Database.ExecuteSqlRawAsync(
+            @"EXEC AddClientDetails 
+            @Name, @Contact, @Contact2, @Email, @Status, @AssignedTo",
+            new SqlParameter("@Name", dto.Name ?? ""),
+            new SqlParameter("@Contact", dto.Contact ?? ""),
+            new SqlParameter("@Contact2", dto.Contact2 ?? ""),
+            new SqlParameter("@Email", dto.Email ?? ""),
+            new SqlParameter("@Status", dto.Status ?? ""),
+            new SqlParameter("@AssignedTo", dto.AssignedTo)
+            /*new SqlParameter("@AssignedBy", dto.AssignedBy)*/// pass GUID directly
+        );
 
-        await _repository.AddAsync(entity, ct);
-
-        // Some repo implementations populate the entity id after save; if not, you might need to refetch
-        return MapToDto(entity);
+        return rowsAffected;
     }
+
+
 
     public async Task<ClientAssignmentDto?> UpdateAsync(int id, UpdateClientAssignmentDto dto, CancellationToken ct = default)
     {

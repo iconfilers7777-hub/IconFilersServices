@@ -9,6 +9,17 @@ namespace IconFilers.Application.DTOs
         public string? Email { get; set; }
         public string? Status { get; set; }
     }
+    public record class ClientDto1
+    {
+        public string? Name { get; set; }
+        public string? Contact { get; set; }
+        public string? Contact2 { get; set; }
+        public string? Email { get; set; }
+        public string? Status { get; set; }
+        public Guid AssignedTo { get; set; }
+
+        public Guid AssignedBy { get; set; }
+    }
     public class SearchRequest
     {
         public string SearchText { get; set; }
