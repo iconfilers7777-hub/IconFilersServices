@@ -1,5 +1,6 @@
 ﻿using IconFilers.Api.IServices;
 using IconFilers.Api.Services;
+using IconFilers.Application.DTOs;
 using IconFilers.Infrastructure.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
@@ -32,7 +33,11 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IManageTeamsService, ManageTeamsService>();
 builder.Services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
 builder.Services.AddScoped<IClientDocumentService, ClientDocumentService>();
+builder.Services.Configure<PayPalOptions>(builder.Configuration.GetSection("PayPal"));
 
+// register IPaymentService
+builder.Services.AddHttpClient<PayPalPaymentService>(); // HttpClient factory
+builder.Services.AddScoped<IPaymentService, PayPalPaymentService>();
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
