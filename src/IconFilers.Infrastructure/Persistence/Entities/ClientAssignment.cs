@@ -9,9 +9,9 @@ public partial class ClientAssignment
 
     public int ClientId { get; set; }
 
-    public Guid AssignedTo { get; set; }
+    public Guid? AssignedTo { get; set; }
 
-    public Guid AssignedBy { get; set; }
+    public Guid? AssignedBy { get; set; }
 
     public string? RoleAtAssignment { get; set; }
 
