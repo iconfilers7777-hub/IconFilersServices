@@ -13,7 +13,7 @@ public partial class ClientAssignment
 
     public Guid AssignedBy { get; set; }
 
-    public string RoleAtAssignment { get; set; } = null!;
+    public string? RoleAtAssignment { get; set; }
 
     public DateTime AssignedAt { get; set; }
 
