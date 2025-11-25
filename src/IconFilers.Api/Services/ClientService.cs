@@ -66,8 +66,6 @@ namespace IconFilers.Api.Services
             }
 
         }
-
-
         public async Task<int> ImportClientsFromExcelAsync(IFormFile file)
         {
             try
@@ -89,24 +87,37 @@ namespace IconFilers.Api.Services
 
                         for (int row = 2; row <= rowCount; row++)
                         {
-                            if (string.IsNullOrWhiteSpace(worksheet.Cells[row, 1].Text))
-                                continue;
-
+                            var name = worksheet.Cells[row, 1].Text;
+                            var contact = worksheet.Cells[row, 2].Text;
+                            var contact2 = worksheet.Cells[row, 3].Text;
                             var email = worksheet.Cells[row, 4].Text;
+                            var status = worksheet.Cells[row, 5].Text;
 
-                            // Email validation
+                            // Validations
+                            if (string.IsNullOrWhiteSpace(name))
+                                throw new Exception($"Name is required at row {row}");
+
+                            if (string.IsNullOrWhiteSpace(contact))
+                                throw new Exception($"Contact is required at row {row}");
+                            if (!System.Text.RegularExpressions.Regex.IsMatch(contact, @"^\d{10}$"))
+                                throw new Exception($"Invalid contact format at row {row}: {contact}");
+
+                            if (!string.IsNullOrWhiteSpace(contact2) && !System.Text.RegularExpressions.Regex.IsMatch(contact2, @"^\d{10}$"))
+                                throw new Exception($"Invalid contact2 format at row {row}: {contact2}");
+
                             if (!string.IsNullOrWhiteSpace(email) && !System.Text.RegularExpressions.Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-                            {
                                 throw new Exception($"Invalid email format at row {row}: {email}");
-                            }
+
+                            if (string.IsNullOrWhiteSpace(status))
+                                throw new Exception($"Status is required at row {row}");
 
                             clients.Add(new ClientDto
                             {
-                                Name = worksheet.Cells[row, 1].Text,
-                                Contact = worksheet.Cells[row, 2].Text,
-                                Contact2 = worksheet.Cells[row, 3].Text,
+                                Name = name,
+                                Contact = contact,
+                                Contact2 = contact2,
                                 Email = email,
-                                Status = worksheet.Cells[row, 5].Text
+                                Status = status
                             });
                         }
                     }
@@ -147,7 +158,6 @@ namespace IconFilers.Api.Services
                 throw new Exception("An unexpected error occurred while importing clients.", ex);
             }
         }
-
 
         public async Task<int> AddClientAsync(ClientDto dto)
         {
