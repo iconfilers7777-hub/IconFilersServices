@@ -92,12 +92,20 @@ namespace IconFilers.Api.Services
                             if (string.IsNullOrWhiteSpace(worksheet.Cells[row, 1].Text))
                                 continue;
 
+                            var email = worksheet.Cells[row, 4].Text;
+
+                            // Email validation
+                            if (!string.IsNullOrWhiteSpace(email) && !System.Text.RegularExpressions.Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                            {
+                                throw new Exception($"Invalid email format at row {row}: {email}");
+                            }
+
                             clients.Add(new ClientDto
                             {
                                 Name = worksheet.Cells[row, 1].Text,
                                 Contact = worksheet.Cells[row, 2].Text,
                                 Contact2 = worksheet.Cells[row, 3].Text,
-                                Email = worksheet.Cells[row, 4].Text,
+                                Email = email,
                                 Status = worksheet.Cells[row, 5].Text
                             });
                         }
@@ -139,6 +147,7 @@ namespace IconFilers.Api.Services
                 throw new Exception("An unexpected error occurred while importing clients.", ex);
             }
         }
+
 
         public async Task<int> AddClientAsync(ClientDto dto)
         {

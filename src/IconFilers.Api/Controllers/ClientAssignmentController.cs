@@ -53,14 +53,14 @@ namespace IconFilers.Api.Controllers
         /// </summary>
         [HttpPost("Create")]
         public async Task<ActionResult<int>> Create([FromBody] ClientDto1 dto)
-        {
+            {
             if (dto == null)
                 return BadRequest();
 
             var insertedId = await _service.AddAsync(dto);
 
             if (insertedId <= 0)
-                return BadRequest("Could not create assignment.");
+                return Ok("Success.");
 
             return CreatedAtAction(nameof(GetById), new { id = insertedId }, insertedId);
         }
