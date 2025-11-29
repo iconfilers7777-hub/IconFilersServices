@@ -136,7 +136,27 @@ namespace IconFilers.Api.Controllers
             }
         }
 
-       
+        [HttpPost("signup")]
+        public async Task<IActionResult> SignUp([FromBody] ClientSignUpDTO clientSignUpDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid data");
+            }
+
+            var result = await _clientService.ClientSignUp(clientSignUpDTO);
+
+            if (result.Contains("already exists"))
+            {
+                return Conflict(result);
+            }
+            else if (result.StartsWith("Error:"))
+            {
+                return StatusCode(500, result);
+            }
+
+            return Ok(result);
+        }
 
 
     }
