@@ -104,8 +104,8 @@ public class ClientAssignmentService : IClientAssignmentService
     {
         Id = e.Id,
         ClientId = e.ClientId,
-        AssignedTo = e.AssignedTo,
-        AssignedBy = e.AssignedBy,
+        AssignedTo = (Guid)e.AssignedTo,
+        AssignedBy = (Guid)e.AssignedBy,
         RoleAtAssignment = e.RoleAtAssignment,
         AssignedAt = e.AssignedAt,
         Status = e.Status,
