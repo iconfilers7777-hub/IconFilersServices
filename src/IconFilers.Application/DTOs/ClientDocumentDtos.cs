@@ -7,4 +7,7 @@ public class ClientDocumentDto
     public string DocumentType { get; set; } = null!;
     public string FilePath { get; set; } = null!;
     public DateTime UploadedAt { get; set; }
+    public string Status { get; set; } = null!;
+
+    public string? Type { get; set; }
 }

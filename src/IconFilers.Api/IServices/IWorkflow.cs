@@ -8,5 +8,13 @@ namespace IconFilers.Api.IServices
         Task<ActionResult<IEnumerable<string>>> GetStatuses();
 
         Task<IEnumerable<string>> GetRoles();
+
+        Task<IEnumerable<DocTypes>> GetTypes();
+
+        Task<IEnumerable<DocCount>> GetDocumentsCount();
+        Task<IEnumerable<DocCount>> GetVerifiedDocumentsCount();
+
+        Task<IEnumerable<DocCount>> GetPendingDocumentsCount();
+        Task<IEnumerable<DocCount>> GetRejectedDocumentsCount();
     }
 }

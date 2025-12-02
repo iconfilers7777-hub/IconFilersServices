@@ -15,5 +15,9 @@ public partial class ClientDocument
 
     public DateTime UploadedAt { get; set; }
 
+    public string Status { get; set; } = null!;   
+
+    public string? Type { get; set; }
+
     public virtual Client Client { get; set; } = null!;
 }

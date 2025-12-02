@@ -1,6 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using IconFilers.Application.DTOs;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 
 namespace IconFilers.Infrastructure.Persistence.Entities;
 
@@ -32,12 +33,20 @@ public partial class AppDbContext : DbContext
 
     public DbSet<Roles> Roles { get; set; }
 
+    public DbSet<DocTypes> Types { get; set; }
+    public DbSet<DocCount> DocCount { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UploadedClient>().HasNoKey();
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Roles>().HasNoKey();
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<DocTypes>().HasNoKey();
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<DocCount>().HasNoKey();
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Status>(entity =>

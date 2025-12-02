@@ -52,5 +52,22 @@ namespace IconFilers.Api.Controllers
                 return BadRequest(new { Error = ex.Message });
             }
         }
+        [HttpGet("GetTypes")]
+        public async Task<IActionResult> GetTypes()
+        {
+            try
+            {
+                var roles = await _WorkflowService.GetTypes();
+
+                if (roles == null)
+                    return NotFound("No active statuses found.");
+
+                return Ok(roles);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
     }
 }

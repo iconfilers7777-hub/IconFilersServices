@@ -137,6 +137,7 @@ namespace IconFilers.Api.Services
                 {
                     ClientId = clientId,
                     DocumentType = string.IsNullOrWhiteSpace(documentType) ? "Unknown" : documentType,
+                    Status = "Active",
                     FilePath = "/" + relativePathForDb.TrimStart('/'), // web-friendly path
                     UploadedAt = DateTime.UtcNow
                 };
@@ -150,7 +151,8 @@ namespace IconFilers.Api.Services
                     ClientId = entity.ClientId,
                     DocumentType = entity.DocumentType,
                     FilePath = entity.FilePath,
-                    UploadedAt = entity.UploadedAt
+                    UploadedAt = entity.UploadedAt,
+                    Status = entity.Status
                 });
             }
 

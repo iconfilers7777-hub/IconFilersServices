@@ -105,6 +105,145 @@ namespace IconFilers.Api.Services
                 throw new Exception("An unexpected error occurred while fetching roles.", ex);
             }
         }
+        public async Task<IEnumerable<DocTypes>> GetTypes()
+        {
+            try
+            {
+                var Types = await _context.Types
+                       .FromSqlRaw("EXEC GetDocumentTypes")
+                       .AsNoTracking()
+                       .ToListAsync();
 
+                return Types;
+            }
+            catch (SqlException sqlEx)
+            {
+                throw new Exception("Database error occurred while fetching Types.", sqlEx);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("A database update error occurred while fetching Types.", dbEx);
+            }
+            catch (DBConcurrencyException dbEx)
+            {
+                throw new Exception("A concurrency error occurred while fetching Types.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An unexpected error occurred while fetching Types.", ex);
+            }
+        }
+        public async Task<IEnumerable<DocCount>> GetDocumentsCount()
+        {
+            try
+            {
+                var Count = await _context.DocCount
+                       .FromSqlRaw("EXEC GetDocumentsCount")
+                       .AsNoTracking()
+                       .ToListAsync();
+
+                return Count;
+            }
+            catch (SqlException sqlEx)
+            {
+                throw new Exception("Database error occurred while fetching Count.", sqlEx);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("A database update error occurred while fetching Count.", dbEx);
+            }
+            catch (DBConcurrencyException dbEx)
+            {
+                throw new Exception("A concurrency error occurred while fetching Count.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An unexpected error occurred while fetching Count.", ex);
+            }
+        }
+        public async Task<IEnumerable<DocCount>> GetVerifiedDocumentsCount()
+        {
+            try
+            {
+                var Count = await _context.DocCount
+                       .FromSqlRaw("EXEC GetVerifiedDocumentsCount")
+                       .AsNoTracking()
+                       .ToListAsync();
+
+                return Count;
+            }
+            catch (SqlException sqlEx)
+            {
+                throw new Exception("Database error occurred while fetching Count.", sqlEx);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("A database update error occurred while fetching Count.", dbEx);
+            }
+            catch (DBConcurrencyException dbEx)
+            {
+                throw new Exception("A concurrency error occurred while fetching Count.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An unexpected error occurred while fetching Count.", ex);
+            }
+        }
+        public async Task<IEnumerable<DocCount>> GetPendingDocumentsCount()
+        {
+            try
+            {
+                var Count = await _context.DocCount
+                       .FromSqlRaw("EXEC GetPendingDocumentsCount")
+                       .AsNoTracking()
+                       .ToListAsync();
+
+                return Count;
+            }
+            catch (SqlException sqlEx)
+            {
+                throw new Exception("Database error occurred while fetching Count.", sqlEx);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("A database update error occurred while fetching Count.", dbEx);
+            }
+            catch (DBConcurrencyException dbEx)
+            {
+                throw new Exception("A concurrency error occurred while fetching Count.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An unexpected error occurred while fetching Count.", ex);
+            }
+        }
+        public async Task<IEnumerable<DocCount>> GetRejectedDocumentsCount()
+        {
+            try
+            {
+                var Count = await _context.DocCount
+                       .FromSqlRaw("EXEC GetRejectedDocumentsCount")
+                       .AsNoTracking()
+                       .ToListAsync();
+
+                return Count;
+            }
+            catch (SqlException sqlEx)
+            {
+                throw new Exception("Database error occurred while fetching Count.", sqlEx);
+            }
+            catch (DbUpdateException dbEx)
+            {
+                throw new Exception("A database update error occurred while fetching Count.", dbEx);
+            }
+            catch (DBConcurrencyException dbEx)
+            {
+                throw new Exception("A concurrency error occurred while fetching Count.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An unexpected error occurred while fetching Count.", ex);
+            }
+        }
     }
 }
