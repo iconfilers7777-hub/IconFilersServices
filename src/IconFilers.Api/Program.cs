@@ -43,7 +43,7 @@ builder.Services.AddScoped<IPaymentService, PayPalPaymentService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    options.SwaggerDoc("v1", new()
     {
         Title = "IconFilers API",
         Version = "v1"
@@ -66,12 +66,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Enable Swagger in development
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "IconFilers API v1"));
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "IconFilers API v1");
+});
 
 // Enable HTTPS, CORS, and routing
 app.UseHttpsRedirection();
