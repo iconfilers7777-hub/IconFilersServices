@@ -69,7 +69,11 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "IconFilers API v1");
+    // IMPORTANT: No leading slash because app runs inside virtual directory (IconFilers)
+    c.SwaggerEndpoint("v1/swagger.json", "IconFilers API v1");
+
+    // Ensures Swagger works inside /IconFilers/swagger
+    c.RoutePrefix = "swagger";
 });
 
 // Enable HTTPS, CORS, and routing
