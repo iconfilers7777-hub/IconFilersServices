@@ -35,8 +35,7 @@ builder.Services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
 builder.Services.AddScoped<IClientDocumentService, ClientDocumentService>();
 builder.Services.Configure<PayPalOptions>(builder.Configuration.GetSection("PayPal"));
 
-// register IPaymentService
-builder.Services.AddHttpClient<PayPalPaymentService>(); // HttpClient factory
+builder.Services.AddHttpClient<PayPalPaymentService>();
 builder.Services.AddScoped<IPaymentService, PayPalPaymentService>();
 
 // Add Swagger
@@ -53,7 +52,7 @@ builder.Services.AddSwaggerGen(options =>
 // Add Infrastructure
 builder.Services.AddInfrastructureServices(connectionString);
 
-// ✅ Add CORS policy to allow all URLs
+// Enable CORS for all
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -66,23 +65,31 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Swagger must work for both Development & Production (IIS)
 app.UseSwagger();
+
 app.UseSwaggerUI(c =>
 {
-    // IMPORTANT: No leading slash because app runs inside virtual directory (IconFilers)
-    c.SwaggerEndpoint("v1/swagger.json", "IconFilers API v1");
+    string basePath = "/IconFilers"; // <-- your virtual directory name
 
-    // Ensures Swagger works inside /IconFilers/swagger
+    c.SwaggerEndpoint($"{basePath}/swagger/v1/swagger.json", "IconFilers API v1");
+
     c.RoutePrefix = "swagger";
 });
 
-// Enable HTTPS, CORS, and routing
+// Enable HTTPS redirection
 app.UseHttpsRedirection();
 
-// ✅ Use CORS policy
+// Enable CORS
 app.UseCors("AllowAll");
 
 app.UseAuthorization();
-app.UseStaticFiles(); // serve files from wwwroot
+
+// Serve wwwroot/static files
+app.UseStaticFiles();
+
+// Register controllers
 app.MapControllers();
+
+// Run app
 app.Run();
