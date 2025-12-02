@@ -2,11 +2,13 @@
 using IconFilers.Api.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IconFilers.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class DashboardController : ControllerBase
     {
         private readonly IWorkflow _WorkflowService;
@@ -16,6 +18,7 @@ namespace IconFilers.Api.Controllers
             _WorkflowService=WorkflowService;
         }
         [HttpGet("GetDocumentsCount")]
+        [Authorize(Roles = "Admin,User,Client")]
         public async Task<IActionResult> GetDocumentsCount()
         {
             try
@@ -33,6 +36,7 @@ namespace IconFilers.Api.Controllers
             }
         }
         [HttpGet("GetVerifiedDocumentsCount")]
+        [Authorize(Roles = "Admin,User,Client")]
         public async Task<IActionResult> GetVerifiedDocumentsCount()
         {
             try
@@ -50,6 +54,7 @@ namespace IconFilers.Api.Controllers
             }
         }
         [HttpGet("GetPendingDocumentsCount")]
+        [Authorize(Roles = "Admin,User,Client")]
         public async Task<IActionResult> GetPendingDocumentsCount()
         {
             try
@@ -67,6 +72,7 @@ namespace IconFilers.Api.Controllers
             }
         }
         [HttpGet("GetRejectedDocumentsCount")]
+        [Authorize(Roles = "Admin,User,Client")]
         public async Task<IActionResult> GetRejectedDocumentsCount()
         {
             try

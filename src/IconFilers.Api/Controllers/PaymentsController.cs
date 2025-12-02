@@ -2,11 +2,13 @@
 using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IconFilers.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PaymentsController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
@@ -19,6 +21,7 @@ namespace IconFilers.Api.Controllers
         }
 
         [HttpPost("create")]
+        [Authorize(Roles = "Admin,Client")]
         public async Task<IActionResult> Create([FromBody] CreatePaymentRequestDto dto)
         {
             try
@@ -47,6 +50,7 @@ namespace IconFilers.Api.Controllers
         }
 
         [HttpPost("capture")]
+        [Authorize(Roles = "Admin,Client")]
         public async Task<IActionResult> Capture([FromBody] CapturePaymentRequestDto dto)
         {
             try

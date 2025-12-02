@@ -3,6 +3,7 @@ using IconFilers.Api.IServices;
 using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IconFilers.Api.Controllers
 {
@@ -20,6 +21,7 @@ namespace IconFilers.Api.Controllers
         [HttpPost("upload-excel")]
         [Consumes("multipart/form-data")]
         [ApiExplorerSettings(IgnoreApi = true)]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UploadExcel([FromForm] IFormFile file)
         {
             try
@@ -34,6 +36,7 @@ namespace IconFilers.Api.Controllers
         }
 
         [HttpGet("Get-uploaded-clients")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetUploadedClients()
         {
             try
@@ -51,6 +54,7 @@ namespace IconFilers.Api.Controllers
         [Route("")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin,Client")]
         public async Task<IActionResult> AddClient([FromBody] ClientDto dto)
         {
             try
@@ -86,6 +90,7 @@ namespace IconFilers.Api.Controllers
         [Route("")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin,User,Client")]
         public async Task<IActionResult> GetClients([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
             try
@@ -109,6 +114,7 @@ namespace IconFilers.Api.Controllers
         [HttpGet("search")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> SearchClients([FromBody] SearchRequest request)
         {
             try
@@ -123,6 +129,7 @@ namespace IconFilers.Api.Controllers
         }
 
         [HttpGet("SearchByLetters")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> SearchClientsByLetters([FromBody] SearchRequest request)
         {
             try
@@ -137,6 +144,7 @@ namespace IconFilers.Api.Controllers
         }
 
         [HttpPost("signup")]
+        [AllowAnonymous]
         public async Task<IActionResult> SignUp([FromBody] ClientSignUpDTO clientSignUpDTO)
         {
             if (!ModelState.IsValid)
@@ -157,7 +165,5 @@ namespace IconFilers.Api.Controllers
 
             return Ok(result);
         }
-
-
     }
 }

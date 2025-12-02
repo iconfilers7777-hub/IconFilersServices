@@ -1,10 +1,12 @@
 ﻿using IconFilers.Api.IServices;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IconFilers.Api.Controllers
 {
     [ApiController]
     [Route("api/clients/{clientId:int}/documents")]
+    [Authorize]
     public class ClientDocumentsController : ControllerBase
     {
         private readonly IClientDocumentService _service;
@@ -20,6 +22,7 @@ namespace IconFilers.Api.Controllers
 
         [HttpPost]
         [RequestSizeLimit(50 * 1024 * 1024)]
+        [Authorize(Roles = "Admin,User,Client")]
         public async Task<IActionResult> Upload(
             int clientId,
             [FromForm] List<IFormFile> files,

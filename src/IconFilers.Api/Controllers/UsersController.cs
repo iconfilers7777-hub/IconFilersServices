@@ -1,11 +1,13 @@
 ﻿using IconFilers.Api.IServices;
 using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IconFilers.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize] // require authenticated
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -15,6 +17,7 @@ namespace IconFilers.Api.Controllers
         /// Get a single user by Id.
         /// </summary>
         [HttpGet("{id:guid}")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
         {
             try
@@ -32,6 +35,7 @@ namespace IconFilers.Api.Controllers
         /// Get a paginated list of users.
         /// </summary>
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetPaged(
             int page = 1,
             int pageSize = 25,
@@ -48,6 +52,7 @@ namespace IconFilers.Api.Controllers
         /// Create a new user.
         /// </summary>
         [HttpPost("Create")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateUserRequest request, CancellationToken ct)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -67,6 +72,7 @@ namespace IconFilers.Api.Controllers
         /// Update an existing user.
         /// </summary>
         [HttpPut("{id:guid}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequest request, CancellationToken ct)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -91,6 +97,7 @@ namespace IconFilers.Api.Controllers
         /// Delete a user by Id.
         /// </summary>
         [HttpDelete("{id:guid}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
         {
             try

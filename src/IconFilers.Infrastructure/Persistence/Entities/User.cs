@@ -16,7 +16,7 @@ public partial class User
 
     [Required(ErrorMessage = "Password is required")]
     [DataType(DataType.Password)]
-    public string Password { get; set; } = null!;
+    public string Password { get; set; } = null!; // kept for compatibility but will store hashed password
     public string Phone { get; set; } = null!;
 
     public string? DeskNumber { get; set; }

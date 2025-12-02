@@ -5,6 +5,10 @@ using IconFilers.Infrastructure.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,19 +19,46 @@ ExcelPackage.License.SetNonCommercialOrganization("IconFilers");
 // Read connection string from appsettings
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Generate secret key for JWT
-var keyBytes = RandomNumberGenerator.GetBytes(32); // 256 bits
-var secretKey = Convert.ToBase64String(keyBytes);
-
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
+
+// Jwt settings must come from configuration (appsettings or env vars)
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtSecret = jwtSection["Secret"] ?? throw new ArgumentNullException("Jwt:Secret not configured");
+var jwtIssuer = jwtSection["Issuer"] ?? "IconFilers";
+var jwtAudience = jwtSection["Audience"] ?? "IconFilers";
+var expiryMinutes = int.TryParse(jwtSection["ExpiryMinutes"], out var m) ? m : 60;
+
+var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+
+// Configure authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = true;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.FromMinutes(1),
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = signingKey
+    };
+});
 
 // Dependency Injection
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IWorkflow, WorkFlowService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(EfRepository<>));
-builder.Services.AddSingleton<IJwtService>(new JwtService(secretKey));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IManageTeamsService, ManageTeamsService>();
@@ -38,6 +69,12 @@ builder.Services.Configure<PayPalOptions>(builder.Configuration.GetSection("PayP
 builder.Services.AddHttpClient<PayPalPaymentService>();
 builder.Services.AddScoped<IPaymentService, PayPalPaymentService>();
 
+// Add JwtService that reads configuration
+builder.Services.AddSingleton<IJwtService, JwtService>();
+
+// Register password hasher for User entity
+builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<IconFilers.Infrastructure.Persistence.Entities.User>, Microsoft.AspNetCore.Identity.PasswordHasher<IconFilers.Infrastructure.Persistence.Entities.User>>();
+
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -47,6 +84,31 @@ builder.Services.AddSwaggerGen(options =>
         Title = "IconFilers API",
         Version = "v1"
     });
+
+    // Add JWT Bearer support to Swagger
+    var securityScheme = new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Enter 'Bearer' [space] and then your valid token in the text input below.\r\nExample: \"Bearer eyJhb...\"",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        Reference = new OpenApiReference
+        {
+            Type = ReferenceType.SecurityScheme,
+            Id = "Bearer"
+        }
+    };
+
+    options.AddSecurityDefinition("Bearer", securityScheme);
+
+    var securityRequirement = new OpenApiSecurityRequirement
+    {
+        { securityScheme, new[] { "Bearer" } }
+    };
+
+    options.AddSecurityRequirement(securityRequirement);
 });
 
 // Add Infrastructure
@@ -83,6 +145,8 @@ app.UseHttpsRedirection();
 // Enable CORS
 app.UseCors("AllowAll");
 
+// Authentication & Authorization middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Serve wwwroot/static files

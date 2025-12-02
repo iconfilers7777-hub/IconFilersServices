@@ -2,6 +2,7 @@
 using IconFilers.Infrastructure.Persistence.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IconFilers.Api.Controllers
 {
@@ -17,6 +18,7 @@ namespace IconFilers.Api.Controllers
         }
 
         [HttpGet("GetStatus")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetStatus()
         {
             try
@@ -36,6 +38,7 @@ namespace IconFilers.Api.Controllers
 
 
         [HttpGet("GetRoles")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetRoles()
         {
             try
@@ -53,6 +56,7 @@ namespace IconFilers.Api.Controllers
             }
         }
         [HttpGet("GetTypes")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetTypes()
         {
             try
