@@ -328,7 +328,7 @@ namespace IconFilers.Api.Services
                     Password = client.Password, 
                     Phone = client.PhoneNumber,
                     WhatsAppNumber = client.AlternatePhoneNumber,
-                    Role = "Registered User",
+                    Role = client.Role,
                     CreatedAt = DateTime.Now
                 };
 
