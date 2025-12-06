@@ -34,15 +34,32 @@ namespace IconFilers.Api.Services
 
         public async Task<UserDto> CreateAsync(CreateUserRequest dto, CancellationToken ct = default)
         {
-            if (await _userRepo.ExistsByEmailAsync(dto.Email ?? string.Empty, ct))
+            // normalize and validate email
+            var email = dto.Email?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(email) || !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
+                throw new InvalidOperationException("Valid email is required.");
+
+            if (await _userRepo.ExistsByEmailAsync(email, ct))
                 throw new InvalidOperationException("Email already in use.");
+
+            // validate phone uniqueness and format
+            var phone = dto.Phone?.Trim() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(phone))
+            {
+                // basic digits-only normalization for comparison
+                var phoneDigits = new string(phone.Where(char.IsDigit).ToArray());
+                if (phoneDigits.Length < 10)
+                    throw new InvalidOperationException("Phone number is invalid. Expecting US or India phone number.");
+                if (await _userRepo.ExistsByPhoneAsync(phone, ct))
+                    throw new InvalidOperationException("Phone number already in use.");
+            }
 
             var entity = new User
             {
                 Id = Guid.NewGuid(),
                 FirstName = dto.FirstName?.Trim() ?? string.Empty,
                 LastName = dto.LastName?.Trim() ?? string.Empty,
-                Email = dto.Email?.Trim() ?? string.Empty,
+                Email = email,
                 Password= dto.Password ?? string.Empty,
                 Phone = dto.Phone?.Trim() ?? string.Empty,
                 DeskNumber = dto.DeskNumber?.Trim(),
@@ -65,11 +82,29 @@ namespace IconFilers.Api.Services
             var entity = await _genericRepo.GetByIdAsync(new object[] { dto.Id }, ct);
             if (entity == null) throw new NotFoundException($"User {dto.Id} not found.");
 
-            // map updates
+            // map updates with validation
             entity.FirstName = dto.FirstName?.Trim() ?? entity.FirstName;
             entity.LastName = dto.LastName?.Trim() ?? entity.LastName;
-            entity.Email = dto.Email?.Trim() ?? entity.Email;
-            entity.Phone = dto.Phone?.Trim() ?? entity.Phone;
+
+            if (!string.IsNullOrWhiteSpace(dto.Email))
+            {
+                var newEmail = dto.Email.Trim();
+                if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(newEmail))
+                    throw new InvalidOperationException("Email is invalid.");
+                if (!string.Equals(entity.Email, newEmail, StringComparison.OrdinalIgnoreCase) && await _userRepo.ExistsByEmailAsync(newEmail, ct))
+                    throw new InvalidOperationException("Email already in use.");
+                entity.Email = newEmail;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Phone))
+            {
+                var newPhone = dto.Phone.Trim();
+                var digits = new string(newPhone.Where(char.IsDigit).ToArray());
+                if (digits.Length < 10) throw new InvalidOperationException("Phone number is invalid.");
+                if (!string.Equals(entity.Phone, newPhone, StringComparison.Ordinal) && await _userRepo.ExistsByPhoneAsync(newPhone, ct))
+                    throw new InvalidOperationException("Phone number already in use.");
+                entity.Phone = newPhone;
+            }
             entity.DeskNumber = dto.DeskNumber?.Trim();
             entity.WhatsAppNumber = dto.WhatsAppNumber?.Trim();
             entity.Role = dto.Role?.Trim() ?? entity.Role;

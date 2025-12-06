@@ -158,5 +158,50 @@ namespace IconFilers.Api.Services
 
             return uploaded;
         }
+
+        public async Task<List<ClientDocumentDto>> UploadClientDocumentsByEmailAsync(
+            string email,
+            IEnumerable<IFormFile> files,
+            string documentType,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email must be provided.", nameof(email));
+
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+
+            // Try to find the user by email (robust comparison: direct equality or lower-cased equality)
+            var user = await _context.Set<User>()
+                .FirstOrDefaultAsync(u => u.Email == email || (u.Email != null && u.Email.ToLower() == normalizedEmail), cancellationToken);
+
+            if (user == null)
+                throw new KeyNotFoundException($"User with email '{email}' not found.");
+
+            if (!string.Equals(user.Role, "Client", StringComparison.OrdinalIgnoreCase))
+                throw new KeyNotFoundException($"User with email '{email}' does not have role 'Client'.");
+
+            // Find the client record by email (robust comparison)
+            var client = await _context.Set<Client>()
+                .FirstOrDefaultAsync(c => c.Email == email || (c.Email != null && c.Email.ToLower() == normalizedEmail), cancellationToken);
+
+            // If client record does not exist but user exists and has role Client, create a client record
+            if (client == null)
+            {
+                client = new Client
+                {
+                    Name = string.IsNullOrWhiteSpace(user.FirstName) && string.IsNullOrWhiteSpace(user.LastName)
+                        ? user.Email
+                        : string.Join(' ', new[] { user.FirstName?.Trim(), user.LastName?.Trim() }.Where(s => !string.IsNullOrWhiteSpace(s))),
+                    Email = user.Email,
+                    CreatedAt = DateTime.UtcNow,
+                    Status = "Active"
+                };
+
+                _context.Set<Client>().Add(client);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+
+            return await UploadClientDocumentsAsync(client.Id, files, documentType, cancellationToken);
+        }
     }
 }

@@ -32,28 +32,44 @@ var expiryMinutes = int.TryParse(jwtSection["ExpiryMinutes"], out var m) ? m : 6
 
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 
-// Configure authentication
-builder.Services.AddAuthentication(options =>
+// Configure authentication. In Development use a simple auto-authentication handler
+// so local development does not require a real JWT token. In Production use JWT.
+if (builder.Environment.IsDevelopment())
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
+    // A lightweight development-only authentication scheme that auto-authenticates
+    // requests as a default development user with Admin role.
+    builder.Services.AddAuthentication("Development")
+        .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, IconFilers.Api.Services.DevelopmentAuthenticationHandler>(
+            "Development", options => { });
+}
+else
 {
-    options.RequireHttpsMetadata = true;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
+    // Configure JWT authentication for non-development environments
+    builder.Services.AddAuthentication(options =>
     {
-        ValidateIssuer = true,
-        ValidIssuer = jwtIssuer,
-        ValidateAudience = true,
-        ValidAudience = jwtAudience,
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.FromMinutes(1),
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = signingKey
-    };
-});
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = true;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1),
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = signingKey
+        };
+    });
+}
+
+// Add authorization services (policies are defined via attributes on controllers)
+builder.Services.AddAuthorization();
 
 // Dependency Injection
 builder.Services.AddScoped<IClientService, ClientService>();

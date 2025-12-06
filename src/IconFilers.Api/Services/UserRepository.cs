@@ -34,8 +34,12 @@ namespace IconFilers.Api.Services
         public async Task<bool> ExistsByPhoneAsync(string phone, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(phone)) return false;
-            var normalized = phone.Trim();
-            return await _set.AsNoTracking().AnyAsync(u => u.Phone == normalized, ct);
+            // normalize incoming phone to digits-only
+            var digits = new string(phone.Where(char.IsDigit).ToArray());
+            if (string.IsNullOrEmpty(digits)) return false;
+            // compare against DB phone after removing common formatting characters
+            return await _set.AsNoTracking().AnyAsync(u => u.Phone != null &&
+                u.Phone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace("+", "") == digits, ct);
         }
 
         public async Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
@@ -48,8 +52,10 @@ namespace IconFilers.Api.Services
         public async Task<User?> GetByPhoneAsync(string phone, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(phone)) return null;
-            var normalized = phone.Trim();
-            return await _set.AsNoTracking().FirstOrDefaultAsync(u => u.Phone == normalized, ct);
+            var digits = new string(phone.Where(char.IsDigit).ToArray());
+            if (string.IsNullOrEmpty(digits)) return null;
+            return await _set.AsNoTracking().FirstOrDefaultAsync(u => u.Phone != null &&
+                u.Phone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace("+", "") == digits, ct);
         }
 
         public async Task<User?> GetByEmailOrPhoneAsync(string emailOrPhone, CancellationToken ct = default)
@@ -57,8 +63,11 @@ namespace IconFilers.Api.Services
             if (string.IsNullOrWhiteSpace(emailOrPhone)) return null;
             var val = emailOrPhone.Trim();
             var lower = val.ToLowerInvariant();
+            var digits = new string(val.Where(char.IsDigit).ToArray());
             return await _set.AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Email.ToLower() == lower || u.Phone == val, ct);
+                .FirstOrDefaultAsync(u => (u.Email != null && u.Email.ToLower() == lower) ||
+                    (digits.Length > 0 && u.Phone != null && u.Phone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace("+", "") == digits)
+                , ct);
         }
 
         public async Task<IEnumerable<User>> GetByRoleAsync(string role, CancellationToken ct = default)
