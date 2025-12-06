@@ -1,6 +1,7 @@
 ﻿using IconFilers.Api.IServices;
 using IconFilers.Application.DTOs;
 using IconFilers.Infrastructure.Persistence.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace IconFilers.Api.Services
 {
@@ -10,11 +11,12 @@ namespace IconFilers.Api.Services
     {
         private readonly IGenericRepository<User> _genericRepo;
         private readonly IUserRepository _userRepo;
-
-        public UserService(IGenericRepository<User> genericRepo, IUserRepository userRepo)
+        private readonly AppDbContext _context;
+        public UserService(IGenericRepository<User> genericRepo, IUserRepository userRepo, AppDbContext context)
         {
             _genericRepo = genericRepo;
             _userRepo = userRepo;
+            _context = context;
         }
 
         public async Task<UserDto> GetByIdAsync(Guid id, CancellationToken ct = default)
@@ -103,5 +105,18 @@ namespace IconFilers.Api.Services
                 u.DiscountAmount,
                 u.CreatedAt
             );
+        public async Task<IEnumerable<EmployeeModel>> GetUsersByRole(string role, CancellationToken ct = default)
+        {
+            try
+            {
+                return await _context.Employees
+                                     .FromSqlInterpolated($"EXEC GetEmployeesByRole {role}")
+                                     .ToListAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error while fetching users by role", ex);
+            }
+        }
     }
 }

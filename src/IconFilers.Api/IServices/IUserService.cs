@@ -1,4 +1,5 @@
 ﻿using IconFilers.Application.DTOs;
+using IconFilers.Infrastructure.Persistence.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,6 @@ namespace IconFilers.Api.IServices
         Task<UserDto> CreateAsync(CreateUserRequest dto, CancellationToken ct = default);
         Task<UserDto> UpdateAsync(UpdateUserRequest dto, CancellationToken ct = default);
         Task DeleteAsync(Guid id, CancellationToken ct = default);
+        Task<IEnumerable<EmployeeModel>> GetUsersByRole(string role, CancellationToken ct = default);
     }
 }

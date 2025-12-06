@@ -15,8 +15,10 @@ public partial class AppDbContext : DbContext
         : base(options)
     {
     }
-
+    public virtual DbSet<ClientDto> ClientDtos { get; set; }
     public virtual DbSet<Client> Clients { get; set; }
+
+    public virtual DbSet<EmployeeModel> Employees { get; set; }
 
     public virtual DbSet<ClientAssignment> ClientAssignments { get; set; }
 
@@ -47,6 +49,12 @@ public partial class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<DocCount>().HasNoKey();
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<EmployeeModel>().HasNoKey();
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<ClientDto>().HasNoKey();
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Status>(entity =>

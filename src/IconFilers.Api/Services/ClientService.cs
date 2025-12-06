@@ -210,16 +210,17 @@ namespace IconFilers.Api.Services
         {
             try
             {
-                if (page <= 0) page = 1;
-                if (pageSize <= 0 || pageSize > 500) pageSize = 50;
+                var parameters = new[]
+                {
+                new SqlParameter("@Page", page),
+                 new SqlParameter("@PageSize", pageSize)
+                 };
 
-                var query = _context.Set<Client>().AsNoTracking()
-                    .OrderByDescending(c => c.CreatedAt)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize);
+                var clients = await _context.Set<ClientDto>()
+                    .FromSqlRaw("EXEC GetClientsPaged @Page, @PageSize", parameters)
+                    .ToListAsync();
 
-                var list = await query.ToListAsync();
-                return list.Select(MapToDto);
+                return clients;
             }
             catch (SqlException sqlEx)
             {

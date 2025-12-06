@@ -3,7 +3,7 @@ namespace IconFilers.Application.DTOs
 {
     public record class ClientDto
     {
-        public int ID { get; set; }
+        public int Id { get; set; }
         public string? Name { get; set; }
         public string? Contact { get; set; }
         public string? Contact2 { get; set; }

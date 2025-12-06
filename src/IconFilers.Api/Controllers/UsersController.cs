@@ -2,6 +2,7 @@
 using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using IconFilers.Infrastructure.Persistence.Entities;
 
 namespace IconFilers.Api.Controllers
 {
@@ -110,5 +111,29 @@ namespace IconFilers.Api.Controllers
                 return NotFound(new { message = ex.Message });
             }
         }
+
+        [HttpGet("GetUserByRole")]
+        [Authorize(Roles = "Admin,User")]
+        public async Task<IActionResult> GetUserByRole(string role, CancellationToken ct)
+        {
+            try
+            {
+                var result = await _userService.GetUsersByRole(role, ct);
+
+                if (result == null || (result is IEnumerable<EmployeeModel> list && !list.Any()))
+                    return NotFound(new { message = "No users found for the given role" });
+
+                return Ok(result);
+            }
+            catch (Exception ex) when (ex is KeyNotFoundException || ex.GetType().Name == "NotFoundException")
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error", error = ex.Message });
+            }
+        }
+
     }
 }
