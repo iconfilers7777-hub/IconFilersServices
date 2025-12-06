@@ -146,14 +146,7 @@ var app = builder.Build();
 // Swagger must work for both Development & Production (IIS)
 app.UseSwagger();
 
-app.UseSwaggerUI(c =>
-{
-    string basePath = "/IconFilers"; // <-- your virtual directory name
-
-    c.SwaggerEndpoint($"{basePath}/swagger/v1/swagger.json", "IconFilers API v1");
-
-    c.RoutePrefix = "swagger";
-});
+app.UseSwaggerUI();
 
 // Enable HTTPS redirection
 app.UseHttpsRedirection();
