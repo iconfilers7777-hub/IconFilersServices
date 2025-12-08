@@ -63,9 +63,6 @@ namespace IconFilers.Api.Controllers
             if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
                 return BadRequest(new { message = "Email and password are required" });
 
-            var existing = await _db.Users.AnyAsync(u => u.Email.ToLower() == request.Email.Trim().ToLower());
-            if (existing) return Conflict(new { message = "Email already registered" });
-
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -78,9 +75,21 @@ namespace IconFilers.Api.Controllers
             };
 
             user.Password = _passwordHasher.HashPassword(user, request.Password);
+          
+            var result = await _db.Database
+                .ExecuteSqlRawAsync(
+                    "EXEC sp_RegisterUser @p0, @p1, @p2, @p3, @p4, @p5, @p6",
+                    user.Id,
+                    user.FirstName,
+                    user.LastName,
+                    user.Email,
+                    user.Phone,
+                    user.Password,
+                    user.Role
+                );
 
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
+            if (result == 0)
+                return Conflict(new { message = "Email already registered" });
 
             var token = _jwtService.GenerateToken(user.Id, user.Email, user.Role);
 
