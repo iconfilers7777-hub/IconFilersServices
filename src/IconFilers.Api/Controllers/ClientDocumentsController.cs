@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace IconFilers.Api.Controllers
 {
     [ApiController]
-    [Route("api/clients/{clientId:int}/documents")]
+    [Route("api/clients/{clientId}/documents")]
     [Authorize]
     public class ClientDocumentsController : ControllerBase
     {

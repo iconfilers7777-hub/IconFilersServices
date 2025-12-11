@@ -113,9 +113,29 @@ namespace IconFilers.Api.Services
                     throw new InvalidOperationException($"File '{formFile.FileName}' has an invalid MIME type '{formFile.ContentType}'.");
                 }
 
-                // Generate unique file name
-                var fileName = $"{Guid.NewGuid()}{ext}";
+                // Use the original filename provided by the client (sanitized) and avoid overwriting existing files
+                var originalFileName = Path.GetFileName(formFile.FileName) ?? ($"upload{ext}");
+                var nameOnly = Path.GetFileNameWithoutExtension(originalFileName);
+                // Replace invalid filename chars with underscore
+                var invalidChars = Path.GetInvalidFileNameChars();
+                var sanitizedBase = string.Concat(nameOnly.Select(c => invalidChars.Contains(c) ? '_' : c));
+                if (string.IsNullOrWhiteSpace(sanitizedBase)) sanitizedBase = "upload";
+                // Limit base name length to avoid overly long paths
+                if (sanitizedBase.Length > 200) sanitizedBase = sanitizedBase.Substring(0, 200);
+
+                var fileName = sanitizedBase + ext;
                 var fullPath = Path.Combine(clientDirFull, fileName);
+
+                // If file exists, append a counter to make it unique (preserve client-chosen name)
+                var counter = 1;
+                while (System.IO.File.Exists(fullPath))
+                {
+                    var candidate = $"{sanitizedBase}-{counter}{ext}";
+                    fullPath = Path.Combine(clientDirFull, candidate);
+                    fileName = candidate;
+                    counter++;
+                }
+
                 var relativePathForDb = Path.Combine(clientDirRelative, fileName).Replace('\\', '/');
 
                 // Save to disk

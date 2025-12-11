@@ -45,7 +45,7 @@ namespace IconFilers.Api.Controllers
         /// <summary>
         /// Get assignments for a specific client
         /// </summary>
-        [HttpGet("client/{clientId:int}")]
+        [HttpGet("client/{clientId}")]
         [Authorize(Roles = "Admin,User,Client")]
         public async Task<ActionResult<IEnumerable<ClientAssignmentDto>>> GetByClientId(string clientId)
         {
