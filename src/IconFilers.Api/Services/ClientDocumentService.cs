@@ -223,5 +223,40 @@ namespace IconFilers.Api.Services
 
             return await UploadClientDocumentsAsync(client.Id, files, documentType, cancellationToken);
         }
+
+        public async Task<List<ClientDocumentDto>> GetDocumentsByClientIdAsync(string clientId, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(clientId)) throw new ArgumentException("clientId required", nameof(clientId));
+
+            var docs = await _context.Set<ClientDocument>()
+                .Where(d => d.ClientId == clientId)
+                .Select(d => new ClientDocumentDto
+                {
+                    Id = d.Id,
+                    ClientId = d.ClientId,
+                    DocumentType = d.DocumentType,
+                    FilePath = d.FilePath,
+                    UploadedAt = d.UploadedAt,
+                    Status = d.Status,
+                    Type = d.Type
+                })
+                .ToListAsync(cancellationToken);
+
+            return docs;
+        }
+
+        public async Task<List<ClientDocumentDto>> GetDocumentsByEmailAsync(string email, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("email required", nameof(email));
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+
+            var client = await _context.Set<Client>()
+                .FirstOrDefaultAsync(c => c.Email == email || (c.Email != null && c.Email.ToLower() == normalizedEmail), cancellationToken);
+
+            if (client == null)
+                throw new KeyNotFoundException($"Client with email '{email}' not found.");
+
+            return await GetDocumentsByClientIdAsync(client.Id, cancellationToken);
+        }
     }
 }

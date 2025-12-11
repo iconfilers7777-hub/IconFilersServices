@@ -20,6 +20,47 @@ namespace IconFilers.Api.Controllers
             _logger = logger;
         }
 
+        [HttpGet("list")]
+        [Authorize(Roles = "Admin,User,Client")]
+        public async Task<IActionResult> ListByClientId(string clientId)
+        {
+            try
+            {
+                var docs = await _service.GetDocumentsByClientIdAsync(clientId, HttpContext.RequestAborted);
+                return Ok(docs);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error listing documents by clientId");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet]
+        [Route("~/api/clients/by-email/{email}/documents/list")]
+        [Authorize(Roles = "Admin,User,Client")]
+        public async Task<IActionResult> ListByEmail(string email)
+        {
+            try
+            {
+                var docs = await _service.GetDocumentsByEmailAsync(email, HttpContext.RequestAborted);
+                return Ok(docs);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error listing documents by email");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
         [HttpPost]
         [RequestSizeLimit(50 * 1024 * 1024)]
         [Authorize(Roles = "Admin,User,Client")]

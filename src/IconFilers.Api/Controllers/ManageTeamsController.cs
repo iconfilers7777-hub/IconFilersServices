@@ -1,4 +1,4 @@
-﻿// Example: Controllers/ManageTeamsController.cs (ASP.NET Core API)
+﻿
 using IconFilers.Api.IServices;
 using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
