@@ -159,7 +159,7 @@ namespace IconFilers.Api.Services
             }
         }
 
-        public async Task<int> AddClientAsync(ClientDto dto)
+        public async Task<string> AddClientAsync(ClientDto dto)
         {
             try
             {

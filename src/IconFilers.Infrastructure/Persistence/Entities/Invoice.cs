@@ -7,7 +7,7 @@ public partial class Invoice
 {
     public Guid Id { get; set; }
 
-    public int ClientId { get; set; }
+    public string ClientId { get; set; }
 
     public string Description { get; set; } = null!;
 

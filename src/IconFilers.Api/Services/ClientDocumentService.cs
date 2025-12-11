@@ -67,7 +67,7 @@ namespace IconFilers.Api.Services
         }
 
         public async Task<List<ClientDocumentDto>> UploadClientDocumentsAsync(
-            int clientId,
+            string clientId,
             IEnumerable<IFormFile> files,
             string documentType,
             CancellationToken cancellationToken = default)

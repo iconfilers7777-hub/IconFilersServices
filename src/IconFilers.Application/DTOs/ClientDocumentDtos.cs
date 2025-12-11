@@ -3,7 +3,7 @@ namespace IconFilers.Application.DTOs;
 public class ClientDocumentDto
 {
     public int Id { get; set; }
-    public int ClientId { get; set; }
+    public string ClientId { get; set; }
     public string DocumentType { get; set; } = null!;
     public string FilePath { get; set; } = null!;
     public DateTime UploadedAt { get; set; }

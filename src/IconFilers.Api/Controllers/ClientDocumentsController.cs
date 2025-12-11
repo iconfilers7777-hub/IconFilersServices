@@ -24,7 +24,7 @@ namespace IconFilers.Api.Controllers
         [RequestSizeLimit(50 * 1024 * 1024)]
         [Authorize(Roles = "Admin,User,Client")]
         public async Task<IActionResult> Upload(
-            int clientId,
+            string clientId,
             [FromForm] List<IFormFile> files,
             [FromForm] string? documentType)
         {

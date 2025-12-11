@@ -2,7 +2,7 @@
 
 public class CreatePaymentRequestDto
 {
-    public int ClientId { get; set; }
+    public string ClientId { get; set; }
     public decimal Amount { get; set; }      // base amount before tax/discount
     public decimal TaxAmount { get; set; }
     public decimal Discount { get; set; }

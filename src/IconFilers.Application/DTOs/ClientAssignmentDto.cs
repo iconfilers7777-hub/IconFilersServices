@@ -9,7 +9,7 @@ namespace IconFilers.Application.DTOs
     public class ClientAssignmentDto
     {
         public int Id { get; set; }
-        public int ClientId { get; set; }
+        public string ClientId { get; set; }
         public Guid AssignedTo { get; set; }
         public Guid AssignedBy { get; set; }
         public string RoleAtAssignment { get; set; } = null!;

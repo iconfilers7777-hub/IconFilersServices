@@ -7,7 +7,7 @@ public partial class ClientDocument
 {
     public int Id { get; set; }
 
-    public int ClientId { get; set; }
+    public string ClientId { get; set; }
 
     public string DocumentType { get; set; } = null!;
 

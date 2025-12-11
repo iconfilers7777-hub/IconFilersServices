@@ -7,7 +7,7 @@ public partial class ClientAssignment
 {
     public int Id { get; set; }
 
-    public int ClientId { get; set; }
+    public string ClientId { get; set; }
 
     public Guid? AssignedTo { get; set; }
 

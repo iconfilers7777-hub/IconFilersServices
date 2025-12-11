@@ -47,7 +47,7 @@ namespace IconFilers.Api.Controllers
         /// </summary>
         [HttpGet("client/{clientId:int}")]
         [Authorize(Roles = "Admin,User,Client")]
-        public async Task<ActionResult<IEnumerable<ClientAssignmentDto>>> GetByClientId(int clientId)
+        public async Task<ActionResult<IEnumerable<ClientAssignmentDto>>> GetByClientId(string clientId)
         {
             var assignments = await _service.GetByClientIdAsync(clientId);
             return Ok(assignments);

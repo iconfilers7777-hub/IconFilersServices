@@ -43,7 +43,7 @@ public class ClientAssignmentService : IClientAssignmentService
         return entity == null ? null : MapToDto(entity);
     }
 
-    public async Task<IEnumerable<ClientAssignmentDto>> GetByClientIdAsync(int clientId, CancellationToken ct = default)
+    public async Task<IEnumerable<ClientAssignmentDto>> GetByClientIdAsync(string clientId, CancellationToken ct = default)
     {
         var entities = await _repository.FindAsync(
             predicate: ca => ca.ClientId == clientId,
