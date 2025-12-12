@@ -3,8 +3,11 @@ using IconFilers.Api.Services;
 using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System;
+using System.Threading;
 
 namespace IconFilers.Api.Controllers
 {
@@ -91,11 +94,26 @@ namespace IconFilers.Api.Controllers
         /// </summary>
         [HttpPut("update/{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<ClientAssignmentDto>> Update(int id, [FromBody] UpdateClientAssignmentDto dto)
+        public async Task<ActionResult<ClientAssignmentDto>> Update(int id, [FromBody] UpdateClientAssignmentDto dto, CancellationToken ct)
         {
             if (dto == null) return BadRequest();
 
-            var updated = await _service.UpdateAsync(id, dto);
+            // If admin is reassigning the client to another user, set AssignedBy from the current user claims
+            if (dto.AssignedTo.HasValue)
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var currentUserId))
+                {
+                    dto.AssignedBy = currentUserId;
+                }
+                else
+                {
+                    // If we can't determine the current user, reject the reassignment
+                    return Forbid();
+                }
+            }
+
+            var updated = await _service.UpdateAsync(id, dto, ct);
             if (updated == null) return NotFound();
 
             return Ok(updated);

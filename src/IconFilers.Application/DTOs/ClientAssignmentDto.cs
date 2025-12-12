@@ -14,7 +14,7 @@ namespace IconFilers.Application.DTOs
         public Guid AssignedBy { get; set; }
         public string RoleAtAssignment { get; set; } = null!;
         public DateTime AssignedAt { get; set; }
-        public string? Status { get; set; }
+        public ClientStatus Status { get; set; }
         public string? Notes { get; set; }
     }
 }

@@ -68,7 +68,7 @@ public class ClientAssignmentService : IClientAssignmentService
             new SqlParameter("@Contact", dto.Contact ?? ""),
             new SqlParameter("@Contact2", dto.Contact2 ?? ""),
             new SqlParameter("@Email", dto.Email ?? ""),
-            new SqlParameter("@Status", dto.Status ?? ""),
+            new SqlParameter("@Status", dto.Status?.ToString() ?? ""),
             new SqlParameter("@AssignedTo", dto.AssignedTo)
             /*new SqlParameter("@AssignedBy", dto.AssignedBy)*/// pass GUID directly
         );
@@ -94,7 +94,7 @@ public class ClientAssignmentService : IClientAssignmentService
                     dto.Contact ?? "",
                     dto.Contact2 ?? "",
                     dto.Email ?? "",
-                    dto.Status ?? "",
+                    dto.Status?.ToString() ?? "",
                     dto.AssignedTo
                 );
             }
@@ -128,8 +128,20 @@ public class ClientAssignmentService : IClientAssignmentService
         if (entity == null) return null;
 
         if (dto.RoleAtAssignment is not null) entity.RoleAtAssignment = dto.RoleAtAssignment;
-        if (dto.Status is not null) entity.Status = dto.Status;
+        if (dto.Status.HasValue) entity.Status = dto.Status.Value.ToString();
         if (dto.Notes is not null) entity.Notes = dto.Notes;
+
+        // Handle reassignment: if AssignedTo provided, update assignment info
+        if (dto.AssignedTo.HasValue)
+        {
+            entity.AssignedTo = dto.AssignedTo;
+            // If caller provided AssignedBy use it, otherwise keep existing
+            if (dto.AssignedBy.HasValue)
+            {
+                entity.AssignedBy = dto.AssignedBy;
+            }
+            entity.AssignedAt = DateTime.UtcNow;
+        }
 
         await _repository.UpdateAsync(entity, ct);
         return MapToDto(entity);
@@ -148,11 +160,11 @@ public class ClientAssignmentService : IClientAssignmentService
     {
         Id = e.Id,
         ClientId = e.ClientId,
-        AssignedTo = (Guid)e.AssignedTo,
-        AssignedBy = (Guid)e.AssignedBy,
+        AssignedTo = e.AssignedTo ?? Guid.Empty,
+        AssignedBy = e.AssignedBy ?? Guid.Empty,
         RoleAtAssignment = e.RoleAtAssignment,
         AssignedAt = e.AssignedAt,
-        Status = e.Status,
+        Status = Enum.TryParse<ClientStatus>(e.Status ?? string.Empty, ignoreCase: true, out var s) ? s : ClientStatus.Unknown,
         Notes = e.Notes
     };
 }
