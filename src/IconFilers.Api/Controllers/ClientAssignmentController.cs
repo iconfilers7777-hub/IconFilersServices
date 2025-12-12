@@ -1,9 +1,10 @@
 ﻿using IconFilers.Api.IServices;
+using IconFilers.Api.Services;
 using IconFilers.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 
 namespace IconFilers.Api.Controllers
 {
@@ -71,6 +72,19 @@ namespace IconFilers.Api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = insertedId }, insertedId);
         }
 
+        [HttpPost("add-bulk")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AddBulk([FromBody] List<ClientDto1> clients, CancellationToken ct)
+        {
+            if (clients == null || clients.Count == 0)
+            {
+                return BadRequest("No clients provided.");
+            }
+
+            var result = await _service.AddBulkAsync(clients, ct);
+
+            return Ok(new { RecordsInserted = result });
+        }
 
         /// <summary>
         /// Update an existing client assignment
