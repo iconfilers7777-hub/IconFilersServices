@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using IconFilers.Api.Controllers.Requests;
 
 namespace IconFilers.Api.Controllers
@@ -94,6 +95,50 @@ namespace IconFilers.Api.Controllers
             var token = _jwtService.GenerateToken(user.Id, user.Email, user.Role);
 
             return CreatedAtAction(nameof(Login), new { id = user.Id }, new { token, user = new { user.Id, user.Email, user.Role } });
+        }
+
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.NewPassword))
+                return BadRequest(new { message = "Email and new password are required" });
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.Trim().ToLower());
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            user.Password = _passwordHasher.HashPassword(user, request.NewPassword);
+            _db.Users.Update(user);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Password has been reset" });
+        }
+
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.OldPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+                return BadRequest(new { message = "Old and new passwords are required" });
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                return Unauthorized(new { message = "Invalid user" });
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            var verify = _passwordHasher.VerifyHashedPassword(user, user.Password, request.OldPassword);
+            if (verify == PasswordVerificationResult.Failed)
+                return Unauthorized(new { message = "Old password is incorrect" });
+
+            user.Password = _passwordHasher.HashPassword(user, request.NewPassword);
+            _db.Users.Update(user);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Password changed successfully" });
         }
     }
 }
