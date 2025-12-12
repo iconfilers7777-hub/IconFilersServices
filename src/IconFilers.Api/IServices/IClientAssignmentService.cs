@@ -11,5 +11,6 @@ namespace IconFilers.Api.IServices
         Task<int> AddBulkAsync(List<ClientDto1> dtoList, CancellationToken ct = default);
         Task<ClientAssignmentDto?> UpdateAsync(int id, UpdateClientAssignmentDto dto, CancellationToken ct = default);
         Task<bool> DeleteAsync(int id, CancellationToken ct = default);
+        Task<int> ReassignByStatusAsync(ClientStatus status, Guid assignedTo, Guid assignedBy, CancellationToken ct = default);
     }
 }

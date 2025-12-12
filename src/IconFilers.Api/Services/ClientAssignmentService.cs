@@ -156,6 +156,34 @@ public class ClientAssignmentService : IClientAssignmentService
         return true;
     }
 
+    public async Task<int> ReassignByStatusAsync(ClientStatus status, Guid assignedTo, Guid assignedBy, CancellationToken ct = default)
+    {
+        var statusString = status.ToString();
+        var entities = await _repository.FindAsync(
+            predicate: ca => ca.Status != null && ca.Status.ToLower() == statusString.ToLower(),
+            orderBy: null,
+            skip: null,
+            take: null,
+            ct: ct,
+            ca => ca.Client
+        );
+
+        var list = entities.ToList();
+        foreach (var e in list)
+        {
+            e.AssignedTo = assignedTo;
+            e.AssignedBy = assignedBy;
+            e.AssignedAt = DateTime.UtcNow;
+        }
+
+        foreach (var e in list)
+        {
+            await _repository.UpdateAsync(e, ct);
+        }
+
+        return list.Count;
+    }
+
     private static ClientAssignmentDto MapToDto(ClientAssignment e) => new()
     {
         Id = e.Id,

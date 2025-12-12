@@ -119,6 +119,20 @@ namespace IconFilers.Api.Controllers
             return Ok(updated);
         }
 
+        [HttpPost("reassign-by-status")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ReassignByStatus([FromBody] ReassignByStatusRequest request, CancellationToken ct)
+        {
+            if (request == null) return BadRequest();
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId))
+                return Forbid();
+
+            var count = await _service.ReassignByStatusAsync(request.Status, request.AssignedTo, currentUserId, ct);
+            return Ok(new { RecordsReassigned = count });
+        }
+
         /// <summary>
         /// Delete a client assignment
         /// </summary>
