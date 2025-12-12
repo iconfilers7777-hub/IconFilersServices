@@ -75,6 +75,50 @@ public class ClientAssignmentService : IClientAssignmentService
 
         return rowsAffected;
     }
+    public async Task<int> AddBulkAsync(List<ClientDto1> dtoList, CancellationToken ct = default)
+    {
+        try
+        {
+            var table = new DataTable();
+            table.Columns.Add("Name", typeof(string));
+            table.Columns.Add("Contact", typeof(string));
+            table.Columns.Add("Contact2", typeof(string));
+            table.Columns.Add("Email", typeof(string));
+            table.Columns.Add("Status", typeof(string));
+            table.Columns.Add("AssignedTo", typeof(Guid));
+
+            foreach (var dto in dtoList)
+            {
+                table.Rows.Add(
+                    dto.Name ?? "",
+                    dto.Contact ?? "",
+                    dto.Contact2 ?? "",
+                    dto.Email ?? "",
+                    dto.Status ?? "",
+                    dto.AssignedTo
+                );
+            }
+
+            var tvpParam = new SqlParameter("@Clients", table);
+            tvpParam.TypeName = "ClientTableType1";
+
+            // OUTPUT parameter
+            var outputParam = new SqlParameter("@InsertedCount", SqlDbType.Int) { Direction = ParameterDirection.Output };
+
+            await _context.Database.ExecuteSqlRawAsync(
+                "EXEC AddClientDetails_bulk @Clients, @InsertedCount OUTPUT",
+                tvpParam,
+                outputParam
+            );
+
+            return (int)outputParam.Value;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Bulk Insert Error: " + ex.Message);
+            return 0;
+        }
+    }
 
 
 
