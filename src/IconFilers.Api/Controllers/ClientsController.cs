@@ -4,6 +4,8 @@ using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 
 namespace IconFilers.Api.Controllers
 {
@@ -12,26 +14,43 @@ namespace IconFilers.Api.Controllers
     public class ClientsController : ControllerBase
     {
         private readonly IClientService _clientService;
+        private readonly IWebHostEnvironment _env;
 
-        public ClientsController(IClientService clientService)
+        public ClientsController(IClientService clientService, IWebHostEnvironment env)
         {
             _clientService = clientService;
+            _env = env;
         }
 
         [HttpPost("upload-excel")]
         [Consumes("multipart/form-data")]
+        [RequestSizeLimit(50_000_000)]
         [ApiExplorerSettings(IgnoreApi = true)]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UploadExcel([FromForm] IFormFile file)
         {
             try
             {
+                if (file == null)
+                    return BadRequest(new { Error = "File is required." });
+
+                var ext = System.IO.Path.GetExtension(file.FileName ?? string.Empty).ToLowerInvariant();
+                if (ext != ".xlsx")
+                    return BadRequest(new { Error = "Invalid file type. Please upload an Excel .xlsx file." });
+
                 int count = await _clientService.ImportClientsFromExcelAsync(file);
                 return Ok(new { Message = $"{count} clients imported successfully!" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Error = ex.Message });
+                if (_env.IsDevelopment())
+                {
+                    // Include full exception for easier debugging in dev
+                    return BadRequest(new { Error = ex.ToString() });
+                }
+
+                // Return the root cause message to help debugging; in production hide inner details
+                return BadRequest(new { Error = ex.GetBaseException().Message });
             }
         }
 
