@@ -12,7 +12,7 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// EPPlus license
+// Configure EPPlus license context for reading Excel files (NonCommercial for development)
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 // Read connection string from appsettings
