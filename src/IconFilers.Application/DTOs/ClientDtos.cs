@@ -10,6 +10,11 @@ namespace IconFilers.Application.DTOs
         public string? Email { get; set; }
         public string? Status { get; set; }
     }
+    public class ClientBulkRequestDto
+    {
+        public Guid AssignedTo { get; set; }
+        public List<ClientDto1> Data { get; set; } = new();
+    }
     public record class ClientDto1
     {
         public string? Name { get; set; }

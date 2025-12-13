@@ -72,17 +72,25 @@ namespace IconFilers.Api.Controllers
 
         [HttpPost("add-bulk")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddBulk([FromBody] List<ClientDto1> clients, CancellationToken ct)
+        public async Task<IActionResult> AddBulk(
+    [FromBody] ClientBulkRequestDto request,
+    CancellationToken ct)
         {
-            if (clients == null || clients.Count == 0)
+            if (request == null || request.Data == null || request.Data.Count == 0)
             {
                 return BadRequest("No clients provided.");
             }
 
-            var result = await _service.AddBulkAsync(clients, ct);
+            foreach (var client in request.Data)
+            {
+                client.AssignedTo = request.AssignedTo;
+            }
+
+            var result = await _service.AddBulkAsync(request.Data, ct);
 
             return Ok(new { RecordsInserted = result });
         }
+
 
         /// <summary>
         /// Update an existing client assignment

@@ -89,21 +89,29 @@ public class ClientAssignmentService : IClientAssignmentService
 
             foreach (var dto in dtoList)
             {
+                
+                if (dto.AssignedTo == Guid.Empty)
+                    throw new Exception("AssignedTo cannot be empty");
+
                 table.Rows.Add(
                     dto.Name ?? "",
                     dto.Contact ?? "",
                     dto.Contact2 ?? "",
                     dto.Email ?? "",
-                    dto.Status?.ToString() ?? "",
+                    dto.Status ?? "",
                     dto.AssignedTo
                 );
             }
 
-            var tvpParam = new SqlParameter("@Clients", table);
-            tvpParam.TypeName = "ClientTableType1";
+            var tvpParam = new SqlParameter("@Clients", table)
+            {
+                TypeName = "ClientTableType1"
+            };
 
-            // OUTPUT parameter
-            var outputParam = new SqlParameter("@InsertedCount", SqlDbType.Int) { Direction = ParameterDirection.Output };
+            var outputParam = new SqlParameter("@InsertedCount", SqlDbType.Int)
+            {
+                Direction = ParameterDirection.Output
+            };
 
             await _context.Database.ExecuteSqlRawAsync(
                 "EXEC AddClientDetails_bulk @Clients, @InsertedCount OUTPUT",
@@ -111,7 +119,9 @@ public class ClientAssignmentService : IClientAssignmentService
                 outputParam
             );
 
-            return (int)outputParam.Value;
+            return outputParam.Value != DBNull.Value
+                ? (int)outputParam.Value
+                : 0;
         }
         catch (Exception ex)
         {
