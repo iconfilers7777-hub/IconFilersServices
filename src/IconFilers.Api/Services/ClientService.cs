@@ -80,12 +80,22 @@ namespace IconFilers.Api.Services
                     await file.CopyToAsync(stream);
                     stream.Position = 0;
 
-                    using (var package = new ExcelPackage(stream))
-                    {
-                        var worksheet = package.Workbook.Worksheets[0];
-                        int rowCount = worksheet.Dimension.Rows;
+                // EPPlus requires setting the license context in non-interactive environments
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-                        for (int row = 2; row <= rowCount; row++)
+                using (var package = new ExcelPackage(stream))
+                {
+                    if (package.Workbook == null || package.Workbook.Worksheets == null || package.Workbook.Worksheets.Count == 0)
+                        throw new Exception("Excel file contains no worksheets.");
+
+                    var worksheet = package.Workbook.Worksheets.First();
+
+                    if (worksheet.Dimension == null)
+                        throw new Exception("Excel worksheet is empty.");
+
+                    int rowCount = worksheet.Dimension.End.Row;
+
+                    for (int row = 2; row <= rowCount; row++)
                         {
                             var name = worksheet.Cells[row, 1].Text;
                             var contact = worksheet.Cells[row, 2].Text;

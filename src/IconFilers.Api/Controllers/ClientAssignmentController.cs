@@ -1,13 +1,8 @@
 ﻿using IconFilers.Api.IServices;
-using IconFilers.Api.Services;
 using IconFilers.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System;
-using System.Threading;
 
 namespace IconFilers.Api.Controllers
 {
