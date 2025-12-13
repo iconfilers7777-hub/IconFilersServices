@@ -80,8 +80,8 @@ namespace IconFilers.Api.Services
                     await file.CopyToAsync(stream);
                     stream.Position = 0;
 
-                // EPPlus requires setting the license context in non-interactive environments
-                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                // EPPlus license is configured at application startup (Program.cs) using ExcelPackage.License API.
+                // Do not set the obsolete LicenseContext property here (EPPlus 8+).
 
                 using (var package = new ExcelPackage(stream))
                 {

@@ -13,8 +13,7 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // EPPlus license
-ExcelPackage.License.SetNonCommercialPersonal("Venkatesh");
-ExcelPackage.License.SetNonCommercialOrganization("IconFilers");
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 // Read connection string from appsettings
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
