@@ -19,6 +19,22 @@ namespace IconFilers.Api.Services
             _context = context;
         }
 
+        public async Task<IEnumerable<IconFilers.Application.DTOs.IdNameDto>> GetUsersByRoleIdName(string role, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(role)) return Array.Empty<IconFilers.Application.DTOs.IdNameDto>();
+
+            var normalized = role.Trim().ToLowerInvariant();
+            var users = await _context.Users
+                                      .AsNoTracking()
+                                      .Where(u => u.Role != null && u.Role.ToLower() == normalized)
+                                      .OrderBy(u => u.FirstName)
+                                      .ThenBy(u => u.LastName)
+                                      .Select(u => new IconFilers.Application.DTOs.IdNameDto(u.Id, (u.FirstName ?? string.Empty) + " " + (u.LastName ?? string.Empty)))
+                                      .ToListAsync(ct);
+
+            return users;
+        }
+
         public async Task<UserDto> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             var entity = await _genericRepo.GetByIdAsync(new object[] { id }, ct);
@@ -152,6 +168,22 @@ namespace IconFilers.Api.Services
             {
                 throw new Exception("Error while fetching users by role", ex);
             }
+        }
+
+        public async Task<IEnumerable<IconFilers.Application.DTOs.IdNameDto>> GetAllUsersAsync(CancellationToken ct = default)
+        {
+            // Return all users with Id and full name
+            var users = await _context.Users
+                                      .AsNoTracking()
+                                      .OrderBy(u => u.FirstName)
+                                      .ThenBy(u => u.LastName)
+                                      .Select(u => new IconFilers.Application.DTOs.IdNameDto(
+                                          u.Id,
+                                          (u.FirstName ?? string.Empty) + " " + (u.LastName ?? string.Empty)
+                                      ))
+                                      .ToListAsync(ct);
+
+            return users;
         }
     }
 }

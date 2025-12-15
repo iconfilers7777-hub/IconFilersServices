@@ -16,5 +16,7 @@ namespace IconFilers.Api.IServices
         Task<UserDto> UpdateAsync(UpdateUserRequest dto, CancellationToken ct = default);
         Task DeleteAsync(Guid id, CancellationToken ct = default);
         Task<IEnumerable<EmployeeModel>> GetUsersByRole(string role, CancellationToken ct = default);
+        Task<IEnumerable<IconFilers.Application.DTOs.IdNameDto>> GetAllUsersAsync(CancellationToken ct = default);
+        Task<IEnumerable<IconFilers.Application.DTOs.IdNameDto>> GetUsersByRoleIdName(string role, CancellationToken ct = default);
     }
 }

@@ -135,5 +135,27 @@ namespace IconFilers.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Get all users with id and full name.
+        /// </summary>
+        [HttpGet("AllIdName")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllIdName(CancellationToken ct)
+        {
+            var items = await _userService.GetAllUsersAsync(ct);
+            return Ok(items);
+        }
+
+        /// <summary>
+        /// Get id and name for users where role is 'User'.
+        /// </summary>
+        [HttpGet("ByRoleIdName")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetUsersByRoleIdName(string role = "User", CancellationToken ct = default)
+        {
+            var items = await _userService.GetUsersByRoleIdName(role, ct);
+            return Ok(items);
+        }
+
     }
 }
