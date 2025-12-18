@@ -1,6 +1,9 @@
 ﻿using IconFilers.Api.IServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.StaticFiles;
+using System.IO;
 
 namespace IconFilers.Api.Controllers
 {
@@ -11,13 +14,16 @@ namespace IconFilers.Api.Controllers
     {
         private readonly IClientDocumentService _service;
         private readonly ILogger<ClientDocumentsController> _logger;
+        private readonly IWebHostEnvironment _env;
 
         public ClientDocumentsController(
             IClientDocumentService service,
-            ILogger<ClientDocumentsController> logger)
+            ILogger<ClientDocumentsController> logger,
+            IWebHostEnvironment env)
         {
             _service = service;
             _logger = logger;
+            _env = env;
         }
 
         [HttpGet("list")]
@@ -36,6 +42,58 @@ namespace IconFilers.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error listing documents by clientId");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet("DownloadClientDocument")]
+        [Authorize(Roles = "Admin,User,Client")]
+        public IActionResult DownloadClientDocumentV2(string clientId, [FromQuery] string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(fileName))
+                return BadRequest("clientId and fileName are required.");
+
+            // Prevent directory traversal attempts
+            if (fileName.Contains("..") || fileName.Contains('/') || fileName.Contains('\\'))
+                return BadRequest("Invalid fileName.");
+
+            // Validate GUID-ish clientId (basic check)
+            if (!Guid.TryParse(clientId, out _))
+                return BadRequest("Invalid clientId.");
+
+            var uploadsRoot = Path.Combine(_env.WebRootPath ?? "", "uploads", "clients");
+            var clientFolder = Path.Combine(uploadsRoot, clientId);
+
+            if (!Directory.Exists(clientFolder))
+                return NotFound("Client folder not found.");
+
+            var filePath = Path.Combine(clientFolder, fileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            try
+            {
+                var provider = new FileExtensionContentTypeProvider();
+                if (!provider.TryGetContentType(fileName, out var contentType))
+                {
+                    contentType = "application/octet-stream";
+                }
+
+                var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var result = new FileStreamResult(stream, contentType)
+                {
+                    FileDownloadName = fileName
+                };
+
+                // Ensure Content-Disposition: attachment is sent
+                Response.Headers["Content-Disposition"] = $"attachment; filename=\"{fileName}\"";
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error streaming client document");
                 return StatusCode(500, "Internal server error");
             }
         }
