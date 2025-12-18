@@ -16,6 +16,7 @@ public partial class AppDbContext : DbContext
     {
     }
     public virtual DbSet<ClientDto> ClientDtos { get; set; }
+    public virtual DbSet<LeadDto> LeadDtos { get; set; }
     public virtual DbSet<Client> Clients { get; set; }
 
     public virtual DbSet<EmployeeModel> Employees { get; set; }
@@ -55,6 +56,7 @@ public partial class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<ClientDto>().HasNoKey();
+        modelBuilder.Entity<LeadDto>().HasNoKey();
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Status>(entity =>

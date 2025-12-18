@@ -54,6 +54,31 @@ namespace IconFilers.Api.Controllers
             }
         }
 
+    /// <summary>
+    /// Partially update a client. Only provided properties will be updated.
+    /// </summary>
+    [HttpPatch("{clientId}")]
+    [Authorize(Roles = "Admin,Client")]
+    public async Task<IActionResult> PatchClient(string clientId, [FromBody] UpdateClientDto dto)
+    {
+        if (dto == null)
+            return BadRequest(new { Error = "No update data provided." });
+
+        try
+        {
+            var updated = await _clientService.PatchClientAsync(clientId, dto);
+            return Ok(updated);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Error = ex.Message });
+        }
+        }
+
         [HttpGet("Get-uploaded-clients")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetUploadedClients()
@@ -183,6 +208,27 @@ namespace IconFilers.Api.Controllers
             }
 
             return Ok(result);
+        }
+
+        [HttpGet("my-assignments")]
+        [Authorize(Roles = "Admin,User,Client")]
+        public async Task<IActionResult> GetMyAssignments()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                                  ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                    return Forbid();
+
+                var assignments = await _clientService.GetMyAssignmentsAsync(userId);
+                return Ok(assignments);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
         }
     }
 }

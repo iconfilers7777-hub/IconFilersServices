@@ -16,5 +16,10 @@ namespace IconFilers.Api.IServices
         Task<IEnumerable<UploadedClient>> SearchClientsByLetters(string searchText);
 
         Task<string> ClientSignUp(ClientSignUpDTO client);
+        /// <summary>
+        /// Partially update a client by id. Only provided properties will be updated.
+        /// </summary>
+        Task<ClientDto> PatchClientAsync(string clientId, UpdateClientDto dto);
+        Task<MyAssignmentsDto> GetMyAssignmentsAsync(Guid userId);
     }
 }

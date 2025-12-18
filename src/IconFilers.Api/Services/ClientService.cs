@@ -21,6 +21,47 @@ namespace IconFilers.Api.Services
             _cache = cache;
         }
 
+        public async Task<MyAssignmentsDto> GetMyAssignmentsAsync(Guid userId)
+        {
+            // Get client assignments where AssignedTo == userId and include client
+            var clientAssignments = await _context.ClientAssignments
+                .Include(ca => ca.Client)
+                .Where(ca => ca.AssignedTo.HasValue && ca.AssignedTo.Value == userId)
+                .ToListAsync();
+
+            var clients = clientAssignments
+                .Select(ca => ca.Client)
+                .Where(c => c != null)
+                .Select(MapToDto)
+                .ToList();
+
+            // Leads are stored in a different table (Leads). Query leads where AssignedTo or AssignedUserId equals the user
+            var leads = new List<LeadDto>();
+
+            try
+            {
+                // We don't have a Lead entity here; use raw SQL mapped to LeadDto if configured in DbContext
+                // Use FromSqlRaw on a keyless DbSet<LeadDto> if available in AppDbContext. Otherwise query via Database.SqlQuery pattern.
+                var param = new Microsoft.Data.SqlClient.SqlParameter("@UserId", userId);
+                // Expecting a stored proc or SQL that returns lead columns matching LeadDto
+                var leadResults = await _context.Set<LeadDto>()
+                    .FromSqlRaw("SELECT Id, ClientId, Name, Contact, Email, Status, CreatedAt FROM Leads WHERE AssignedTo = @UserId OR AssignedUserId = @UserId", param)
+                    .ToListAsync();
+
+                leads = leadResults;
+            }
+            catch
+            {
+                // If mapping isn't configured, swallow and return empty leads list
+            }
+
+            return new MyAssignmentsDto
+            {
+                Clients = clients,
+                Leads = leads
+            };
+        }
+
         public async Task<IEnumerable<UploadedClient>> GetExcelUploadedClients()
         {
             try
@@ -80,22 +121,22 @@ namespace IconFilers.Api.Services
                     await file.CopyToAsync(stream);
                     stream.Position = 0;
 
-                // EPPlus license is configured at application startup (Program.cs) using ExcelPackage.License API.
-                // Do not set the obsolete LicenseContext property here (EPPlus 8+).
+                    // EPPlus license is configured at application startup (Program.cs) using ExcelPackage.License API.
+                    // Do not set the obsolete LicenseContext property here (EPPlus 8+).
 
-                using (var package = new ExcelPackage(stream))
-                {
-                    if (package.Workbook == null || package.Workbook.Worksheets == null || package.Workbook.Worksheets.Count == 0)
-                        throw new Exception("Excel file contains no worksheets.");
+                    using (var package = new ExcelPackage(stream))
+                    {
+                        if (package.Workbook == null || package.Workbook.Worksheets == null || package.Workbook.Worksheets.Count == 0)
+                            throw new Exception("Excel file contains no worksheets.");
 
-                    var worksheet = package.Workbook.Worksheets.First();
+                        var worksheet = package.Workbook.Worksheets.First();
 
-                    if (worksheet.Dimension == null)
-                        throw new Exception("Excel worksheet is empty.");
+                        if (worksheet.Dimension == null)
+                            throw new Exception("Excel worksheet is empty.");
 
-                    int rowCount = worksheet.Dimension.End.Row;
+                        int rowCount = worksheet.Dimension.End.Row;
 
-                    for (int row = 2; row <= rowCount; row++)
+                        for (int row = 2; row <= rowCount; row++)
                         {
                             var name = worksheet.Cells[row, 1].Text;
                             var contact = worksheet.Cells[row, 2].Text;
@@ -109,13 +150,13 @@ namespace IconFilers.Api.Services
 
                             if (string.IsNullOrWhiteSpace(contact))
                                 throw new Exception($"Contact is required at row {row}");
-                            if (!System.Text.RegularExpressions.Regex.IsMatch(contact, @"^\d{10}$"))
+                            if (!Regex.IsMatch(contact, @"^\d{10}$"))
                                 throw new Exception($"Invalid contact format at row {row}: {contact}");
 
-                            if (!string.IsNullOrWhiteSpace(contact2) && !System.Text.RegularExpressions.Regex.IsMatch(contact2, @"^\d{10}$"))
+                            if (!string.IsNullOrWhiteSpace(contact2) && !Regex.IsMatch(contact2, @"^\d{10}$"))
                                 throw new Exception($"Invalid contact2 format at row {row}: {contact2}");
 
-                            if (!string.IsNullOrWhiteSpace(email) && !System.Text.RegularExpressions.Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                            if (!string.IsNullOrWhiteSpace(email) && !Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
                                 throw new Exception($"Invalid email format at row {row}: {email}");
 
                             if (string.IsNullOrWhiteSpace(status))
@@ -132,7 +173,7 @@ namespace IconFilers.Api.Services
                         }
                     }
                 }
-
+                
                 var dataTable = new DataTable();
                 dataTable.Columns.Add("Name", typeof(string));
                 dataTable.Columns.Add("Contact", typeof(string));
@@ -354,6 +395,31 @@ namespace IconFilers.Api.Services
             }
         }
 
+
+        public async Task<ClientDto> PatchClientAsync(string clientId, UpdateClientDto dto)
+        {
+            var client = await _context.Set<Client>().FirstOrDefaultAsync(c => c.Id == clientId);
+            if (client == null)
+                throw new KeyNotFoundException($"Client with id {clientId} not found.");
+
+            if (dto.Name != null) client.Name = dto.Name;
+            if (dto.Email != null) client.Email = dto.Email;
+            if (dto.Phone != null) client.Contact = dto.Phone;
+            if (dto.Address != null) client.Address = dto.Address;
+            if (dto.Status != null) client.Status = dto.Status;
+
+            await _context.SaveChangesAsync();
+
+            return new ClientDto
+            {
+                Id = client.Id,
+                Name = client.Name,
+                Contact = client.Contact,
+                Contact2 = client.Contact2,
+                Email = client.Email,
+                Status = client.Status
+            };
+        }
 
     }
 }

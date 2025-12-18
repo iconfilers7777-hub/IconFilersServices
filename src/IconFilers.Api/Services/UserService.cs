@@ -185,5 +185,24 @@ namespace IconFilers.Api.Services
 
             return users;
         }
+
+        public async Task<UserDto> PatchUserAsync(Guid id, UpdateUserDto dto, CancellationToken ct = default)
+        {
+            var user = await _genericRepo.GetByIdAsync(new object[] { id }, ct);
+            if (user == null) throw new NotFoundException($"User {id} not found.");
+
+            if (dto.Name != null)
+            {
+                var names = dto.Name.Split(' ', 2);
+                user.FirstName = names[0];
+                if (names.Length > 1) user.LastName = names[1];
+            }
+            if (dto.Email != null) user.Email = dto.Email;
+            if (dto.Phone != null) user.Phone = dto.Phone;
+            if (dto.Role != null) user.Role = dto.Role;
+
+            await _genericRepo.UpdateAsync(user, ct);
+            return MapToDto(user);
+        }
     }
 }

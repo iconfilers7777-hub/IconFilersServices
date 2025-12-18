@@ -136,6 +136,29 @@ namespace IconFilers.Api.Controllers
         }
 
         /// <summary>
+        /// Partially update a user. Only provided properties will be updated.
+        /// </summary>
+        [HttpPatch("{id:guid}")]
+        [Authorize(Roles = "Admin,User")]
+        public async Task<IActionResult> PatchUser(Guid id, [FromBody] UpdateUserDto dto, CancellationToken ct)
+        {
+            if (dto == null) return BadRequest(new { message = "No update data provided." });
+            try
+            {
+                var updated = await _userService.PatchUserAsync(id, dto, ct);
+                return Ok(updated);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Get all users with id and full name.
         /// </summary>
         [HttpGet("AllIdName")]

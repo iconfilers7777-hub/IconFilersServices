@@ -18,5 +18,9 @@ namespace IconFilers.Api.IServices
         Task<IEnumerable<EmployeeModel>> GetUsersByRole(string role, CancellationToken ct = default);
         Task<IEnumerable<IconFilers.Application.DTOs.IdNameDto>> GetAllUsersAsync(CancellationToken ct = default);
         Task<IEnumerable<IconFilers.Application.DTOs.IdNameDto>> GetUsersByRoleIdName(string role, CancellationToken ct = default);
+        /// <summary>
+        /// Partially update a user by id. Only provided properties will be updated.
+        /// </summary>
+        Task<UserDto> PatchUserAsync(Guid id, UpdateUserDto dto, CancellationToken ct = default);
     }
 }
