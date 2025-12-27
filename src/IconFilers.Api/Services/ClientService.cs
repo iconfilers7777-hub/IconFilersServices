@@ -421,5 +421,94 @@ namespace IconFilers.Api.Services
             };
         }
 
+        public async Task<ClientDetailsDto?> GetClientDetailsAsync(string clientId)
+        {
+            if (string.IsNullOrWhiteSpace(clientId))
+                return null;
+
+            var client = await _context.Clients
+                .Include(c => c.ClientAssignments)
+                .Include(c => c.ClientDocuments)
+                .Include(c => c.Invoices)
+                .Include(c => c.Payments)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == clientId);
+
+            if (client == null) return null;
+
+            var dto = new ClientDetailsDto
+            {
+                Client = new ClientDto
+                {
+                    Id = client.Id,
+                    Name = client.Name,
+                    Contact = client.Contact,
+                    Contact2 = client.Contact2,
+                    Email = client.Email,
+                    Status = client.Status
+                },
+                Assignments = client.ClientAssignments?.Select(a => new ClientAssignmentDto
+                {
+                    Id = a.Id,
+                    ClientId = a.ClientId,
+                    AssignedTo = a.AssignedTo ?? Guid.Empty,
+                    AssignedBy = a.AssignedBy ?? Guid.Empty,
+                    RoleAtAssignment = a.RoleAtAssignment ?? string.Empty,
+                    AssignedAt = a.AssignedAt,
+                    Status = a.Status != null ? Enum.TryParse<ClientStatus>(a.Status, out var cs) ? cs : ClientStatus.Unknown : ClientStatus.Unknown,
+                    Notes = a.Notes
+                }).ToList() ?? new List<ClientAssignmentDto>(),
+                Documents = client.ClientDocuments?.Select(d => new ClientDocumentDto
+                {
+                    Id = d.Id,
+                    ClientId = d.ClientId,
+                    DocumentType = d.DocumentType,
+                    FilePath = d.FilePath,
+                    UploadedAt = d.UploadedAt,
+                    Status = d.Status,
+                    Type = d.DocumentType
+                }).ToList() ?? new List<ClientDocumentDto>(),
+                Invoices = client.Invoices?.Select(i => new ClientInvoiceDto
+                {
+                    Id = i.Id,
+                    ClientId = i.ClientId,
+                    Description = i.Description,
+                    TotalAmount = i.TotalAmount,
+                    CreatedAt = i.CreatedAt
+                }).ToList() ?? new List<ClientInvoiceDto>(),
+                Payments = client.Payments?.Select(p => new ClientPaymentDto
+                {
+                    Id = p.Id,
+                    ClientId = p.ClientId,
+                    Amount = p.Amount,
+                    TaxAmount = p.TaxAmount,
+                    Discount = p.Discount,
+                    NetAmount = p.NetAmount,
+                    PaymentMode = p.PaymentMode,
+                    Status = p.Status,
+                    CreatedAt = p.CreatedAt
+                }).ToList() ?? new List<ClientPaymentDto>()
+            };
+
+            return dto;
+        }
+
+        public async Task<ClientDetailsDto?> GetClientDetailsByEmailAsync(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return null;
+
+            var client = await _context.Clients
+                .Include(c => c.ClientAssignments)
+                .Include(c => c.ClientDocuments)
+                .Include(c => c.Invoices)
+                .Include(c => c.Payments)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Email == email);
+
+            if (client == null) return null;
+
+            return await GetClientDetailsAsync(client.Id);
+        }
+
     }
 }

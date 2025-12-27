@@ -230,5 +230,47 @@ namespace IconFilers.Api.Controllers
                 return BadRequest(new { Error = ex.Message });
             }
         }
+
+        [HttpGet("{clientId}/details")]
+        [Authorize(Roles = "Admin,User,Client")]
+        public async Task<IActionResult> GetClientDetails(string clientId)
+        {
+            if (string.IsNullOrWhiteSpace(clientId))
+                return BadRequest(new { Error = "clientId is required." });
+
+            try
+            {
+                var details = await _clientService.GetClientDetailsAsync(clientId);
+                if (details == null)
+                    return NotFound(new { Error = "Client not found." });
+
+                return Ok(details);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        [HttpGet("by-email/{email}/details")]
+        [Authorize(Roles = "Admin,User,Client")]
+        public async Task<IActionResult> GetClientDetailsByEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest(new { Error = "email is required." });
+
+            try
+            {
+                var details = await _clientService.GetClientDetailsByEmailAsync(email);
+                if (details == null)
+                    return NotFound(new { Error = "Client not found." });
+
+                return Ok(details);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
     }
 }

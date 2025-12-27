@@ -21,5 +21,7 @@ namespace IconFilers.Api.IServices
         /// </summary>
         Task<ClientDto> PatchClientAsync(string clientId, UpdateClientDto dto);
         Task<MyAssignmentsDto> GetMyAssignmentsAsync(Guid userId);
+        Task<ClientDetailsDto?> GetClientDetailsAsync(string clientId);
+        Task<ClientDetailsDto?> GetClientDetailsByEmailAsync(string email);
     }
 }
