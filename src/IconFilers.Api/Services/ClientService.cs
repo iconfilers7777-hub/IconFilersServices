@@ -21,6 +21,22 @@ namespace IconFilers.Api.Services
             _cache = cache;
         }
 
+        public async Task<MyAssignmentsDto> GetAssignmentsByUserIdAsync(string userId)
+        {
+            // Try parse GUID first
+            if (Guid.TryParse(userId, out var guid))
+            {
+                return await GetMyAssignmentsAsync(guid);
+            }
+            // Non-GUID user id cannot be matched reliably against Guid AssignedTo column via EF Core.
+            // Return empty results to avoid unsupported client-side translation.
+            return new MyAssignmentsDto
+            {
+                Clients = new List<ClientDto>(),
+                Leads = new List<LeadDto>()
+            };
+        }
+
         public async Task<MyAssignmentsDto> GetMyAssignmentsAsync(Guid userId)
         {
             // Get client assignments where AssignedTo == userId and include client
@@ -330,6 +346,7 @@ namespace IconFilers.Api.Services
             if (c == null) return null!;
             return new ClientDto
             {
+                Id = c.Id,
                 Name = c.Name,
                 Contact = c.Contact,
                 Contact2 = c.Contact2,

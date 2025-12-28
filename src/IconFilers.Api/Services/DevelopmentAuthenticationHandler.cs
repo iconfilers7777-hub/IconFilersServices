@@ -20,9 +20,11 @@ namespace IconFilers.Api.Services
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // Create a principal that has Admin and User roles for local development
+            // Use a stable GUID for development so GetMyAssignments can match AssignedTo values in DB
+            var devGuid = "76864361-6D00-459C-BF5A-0480DB37FF09";
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, "dev-user"),
+                new Claim(ClaimTypes.NameIdentifier, devGuid),
                 new Claim(ClaimTypes.Name, "Development User"),
                 new Claim(ClaimTypes.Role, "Admin"),
                 new Claim(ClaimTypes.Role, "User")

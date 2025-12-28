@@ -18,6 +18,19 @@ public class ClientAssignmentService : IClientAssignmentService
         _context = context;
     }
 
+    public async Task<IEnumerable<ClientAssignmentDto>> GetByAssignedToAsync(Guid assignedTo, CancellationToken ct = default)
+    {
+        var entities = await _context.ClientAssignments
+            .AsNoTracking()
+            .Include(ca => ca.Client)
+            .Include(ca => ca.AssignedByNavigation)
+            .Include(ca => ca.AssignedToNavigation)
+            .Where(ca => ca.AssignedTo.HasValue && ca.AssignedTo.Value == assignedTo)
+            .ToListAsync(ct);
+
+        return entities.Select(MapToDto);
+    }
+
     public async Task<IEnumerable<ClientAssignmentDto>> GetAllAsync(CancellationToken ct = default)
     {
         // FindAsync with null predicate returns everything (and includes navigations)
@@ -45,16 +58,16 @@ public class ClientAssignmentService : IClientAssignmentService
 
     public async Task<IEnumerable<ClientAssignmentDto>> GetByClientIdAsync(string clientId, CancellationToken ct = default)
     {
-        var entities = await _repository.FindAsync(
-            predicate: ca => ca.ClientId == clientId,
-            orderBy: null,
-            skip: null,
-            take: null,
-            ct: ct,
-            ca => ca.Client,
-            ca => ca.AssignedByNavigation,
-            ca => ca.AssignedToNavigation
-        );
+        // Use direct EF Core query to avoid any translation issues with the generic repository predicates
+        var key = (clientId ?? string.Empty).Trim();
+
+        var entities = await _context.ClientAssignments
+            .AsNoTracking()
+            .Include(ca => ca.Client)
+            .Include(ca => ca.AssignedByNavigation)
+            .Include(ca => ca.AssignedToNavigation)
+            .Where(ca => ca.ClientId != null && ca.ClientId == key)
+            .ToListAsync(ct);
 
         return entities.Select(MapToDto);
     }

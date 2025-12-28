@@ -16,10 +16,39 @@ namespace IconFilers.Api.Controllers
         private readonly IClientService _clientService;
         private readonly IWebHostEnvironment _env;
 
+        // Helper claim names to try when extracting user id
+        private static readonly string[] _userIdClaimTypes = new[]
+        {
+            System.Security.Claims.ClaimTypes.NameIdentifier,
+            System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub,
+            "oid",
+            "user_id",
+            "id",
+            System.Security.Claims.ClaimTypes.Name,
+            "unique_name"
+        };
+
         public ClientsController(IClientService clientService, IWebHostEnvironment env)
         {
             _clientService = clientService;
             _env = env;
+        }
+
+        private Guid? GetUserIdFromClaims()
+        {
+            foreach (var ct in _userIdClaimTypes)
+            {
+                var claim = User.FindFirst(ct)?.Value;
+                if (string.IsNullOrEmpty(claim)) continue;
+
+                if (Guid.TryParse(claim, out var g)) return g;
+
+                // sometimes the claim contains additional data, try to parse last segment
+                var parts = claim.Split(':', '|', '/');
+                if (parts.Length > 1 && Guid.TryParse(parts.Last(), out var g2)) return g2;
+            }
+
+            return null;
         }
 
         [HttpPost("upload-excel")]
@@ -216,14 +245,64 @@ namespace IconFilers.Api.Controllers
         {
             try
             {
-                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                                  ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+                var userGuid = GetUserIdFromClaims();
+                if (userGuid.HasValue)
+                {
+                    var assignments = await _clientService.GetMyAssignmentsAsync(userGuid.Value);
+                    return Ok(assignments);
+                }
 
-                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-                    return Forbid();
+                // Fallback: try raw claim values (useful in development when NameIdentifier isn't a GUID)
+                string raw = null;
+                foreach (var ct in _userIdClaimTypes)
+                {
+                    var v = User.FindFirst(ct)?.Value;
+                    if (!string.IsNullOrEmpty(v))
+                    {
+                        raw = v;
+                        break;
+                    }
+                }
 
-                var assignments = await _clientService.GetMyAssignmentsAsync(userId);
-                return Ok(assignments);
+                if (!string.IsNullOrEmpty(raw))
+                {
+                    var assignments = await _clientService.GetAssignmentsByUserIdAsync(raw);
+                    return Ok(assignments);
+                }
+
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get all clients assigned to a specific user. Admins can query any user; non-admins may only query their own assignments.
+        /// GET api/clients/assigned/{userId}
+        /// </summary>
+        [HttpGet("assigned/{userId}")]
+        [Authorize(Roles = "Admin,User,Client")]
+        public async Task<IActionResult> GetClientsAssignedToUser(string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return BadRequest(new { Error = "userId is required." });
+
+            if (!Guid.TryParse(userId, out var targetUserId))
+                return BadRequest(new { Error = "userId must be a valid GUID." });
+
+            // If caller is not in Admin role, ensure they can only fetch their own assignments
+            if (!User.IsInRole("Admin"))
+            {
+                var callerId = GetUserIdFromClaims();
+                if (!callerId.HasValue || callerId.Value != targetUserId) return Forbid();
+            }
+
+            try
+            {
+                var assignments = await _clientService.GetMyAssignmentsAsync(targetUserId);
+                return Ok(assignments?.Clients ?? new List<ClientDto>());
             }
             catch (Exception ex)
             {

@@ -53,6 +53,19 @@ namespace IconFilers.Api.Controllers
         }
 
         /// <summary>
+        /// Get assignments assigned to a specific user
+        /// </summary>
+        [HttpGet("assigned/{userId}")]
+        [Authorize(Roles = "Admin,User,Client")]
+        public async Task<ActionResult<IEnumerable<ClientAssignmentDto>>> GetByAssignedTo(string userId)
+        {
+            if (!Guid.TryParse(userId, out var guid)) return BadRequest("userId must be a GUID");
+
+            var assignments = await _service.GetByAssignedToAsync(guid);
+            return Ok(assignments);
+        }
+
+        /// <summary>
         /// Create a new client assignment
         /// </summary>
         [HttpPost("Create")]
