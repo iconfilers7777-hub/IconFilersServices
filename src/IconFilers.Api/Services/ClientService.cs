@@ -465,6 +465,13 @@ namespace IconFilers.Api.Services
             // handle assignment change: create new ClientAssignment if AssignedTo provided
             if (dto.AssignedTo.HasValue)
             {
+                // validate that AssignedTo user exists to avoid FK violation
+                var userExists = await _context.Users.AnyAsync(u => u.Id == dto.AssignedTo.Value);
+                if (!userExists)
+                {
+                    throw new ArgumentException($"AssignedTo user with id {dto.AssignedTo.Value} does not exist.");
+                }
+
                 var assignment = new ClientAssignment
                 {
                     ClientId = client.Id,
