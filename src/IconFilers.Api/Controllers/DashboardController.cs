@@ -1,10 +1,7 @@
 ﻿using IconFilers.Api.IServices;
-using IconFilers.Api.Services;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using IconFilers.Api.IServices;
 using IconFilers.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace IconFilers.Api.Controllers

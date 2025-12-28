@@ -1,4 +1,6 @@
 // IconFilers.Application/DTOs/ClientDtos.cs
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace IconFilers.Application.DTOs
 {
     public record class ClientDto
@@ -9,6 +11,11 @@ namespace IconFilers.Application.DTOs
         public string? Contact2 { get; set; }
         public string? Email { get; set; }
         public string? Status { get; set; }
+        // AssignedTo user id (if any) and display name
+        [NotMapped]
+        public Guid? AssignedTo { get; set; }
+        [NotMapped]
+        public string? AssignedUserName { get; set; }
     }
     public class ClientBulkRequestDto
     {

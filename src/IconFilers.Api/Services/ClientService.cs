@@ -42,7 +42,9 @@ namespace IconFilers.Api.Services
             // Get client assignments where AssignedTo == userId and include client
             var clientAssignments = await _context.ClientAssignments
                 .Include(ca => ca.Client)
+                .Include(ca => ca.AssignedToNavigation)
                 .Where(ca => ca.AssignedTo.HasValue && ca.AssignedTo.Value == userId)
+                .OrderByDescending(ca => ca.AssignedAt)
                 .ToListAsync();
 
             var clients = clientAssignments
@@ -50,6 +52,20 @@ namespace IconFilers.Api.Services
                 .Where(c => c != null)
                 .Select(MapToDto)
                 .ToList();
+
+            // populate assignment info on client dtos
+            foreach (var dto in clients)
+            {
+                var ca = clientAssignments.FirstOrDefault(x => x.ClientId == dto.Id);
+                if (ca != null)
+                {
+                    dto.AssignedTo = ca.AssignedTo;
+                    if (ca.AssignedToNavigation != null)
+                    {
+                        dto.AssignedUserName = (ca.AssignedToNavigation.FirstName + " " + ca.AssignedToNavigation.LastName).Trim();
+                    }
+                }
+            }
 
             // Leads are stored in a different table (Leads). Query leads where AssignedTo or AssignedUserId equals the user
             var leads = new List<LeadDto>();
@@ -287,6 +303,27 @@ namespace IconFilers.Api.Services
                     .FromSqlRaw("EXEC GetClientsPaged @Page, @PageSize", parameters)
                     .ToListAsync();
 
+                if (clients != null && clients.Any())
+                {
+                    var ids = clients.Select(c => c.Id).ToList();
+                    var assignments = await _context.ClientAssignments
+                        .Include(a => a.AssignedToNavigation)
+                        .Where(a => ids.Contains(a.ClientId) && a.AssignedTo.HasValue)
+                        .OrderByDescending(a => a.AssignedAt)
+                        .ToListAsync();
+
+                    foreach (var dto in clients)
+                    {
+                        var a = assignments.FirstOrDefault(x => x.ClientId == dto.Id);
+                        if (a != null)
+                        {
+                            dto.AssignedTo = a.AssignedTo;
+                            if (a.AssignedToNavigation != null)
+                                dto.AssignedUserName = (a.AssignedToNavigation.FirstName + " " + a.AssignedToNavigation.LastName).Trim();
+                        }
+                    }
+                }
+
                 return clients;
             }
             catch (SqlException sqlEx)
@@ -425,9 +462,25 @@ namespace IconFilers.Api.Services
             if (dto.Address != null) client.Address = dto.Address;
             if (dto.Status != null) client.Status = dto.Status;
 
+            // handle assignment change: create new ClientAssignment if AssignedTo provided
+            if (dto.AssignedTo.HasValue)
+            {
+                var assignment = new ClientAssignment
+                {
+                    ClientId = client.Id,
+                    AssignedTo = dto.AssignedTo,
+                    AssignedBy = null,
+                    RoleAtAssignment = null,
+                    AssignedAt = DateTime.UtcNow,
+                    Status = "Assigned",
+                    Notes = "Assigned via PatchClient API"
+                };
+                _context.ClientAssignments.Add(assignment);
+            }
+
             await _context.SaveChangesAsync();
 
-            return new ClientDto
+            var result = new ClientDto
             {
                 Id = client.Id,
                 Name = client.Name,
@@ -436,6 +489,17 @@ namespace IconFilers.Api.Services
                 Email = client.Email,
                 Status = client.Status
             };
+
+            // populate assignment info on result if exists
+            if (dto.AssignedTo.HasValue)
+            {
+                result.AssignedTo = dto.AssignedTo;
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == dto.AssignedTo.Value);
+                if (user != null)
+                    result.AssignedUserName = (user.FirstName + " " + user.LastName).Trim();
+            }
+
+            return result;
         }
 
         public async Task<ClientDetailsDto?> GetClientDetailsAsync(string clientId)
