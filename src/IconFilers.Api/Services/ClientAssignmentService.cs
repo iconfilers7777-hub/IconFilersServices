@@ -20,15 +20,24 @@ public class ClientAssignmentService : IClientAssignmentService
 
     public async Task<IEnumerable<ClientAssignmentDto>> GetByAssignedToAsync(Guid assignedTo, CancellationToken ct = default)
     {
+        // Retrieve assignments for the user ordered by AssignedAt descending so the most recent
+        // assignment for a client comes first. Then group by ClientId and take the first item
+        // per group to avoid returning duplicate client entries (multiple assignments for same client).
         var entities = await _context.ClientAssignments
             .AsNoTracking()
             .Include(ca => ca.Client)
             .Include(ca => ca.AssignedByNavigation)
             .Include(ca => ca.AssignedToNavigation)
             .Where(ca => ca.AssignedTo.HasValue && ca.AssignedTo.Value == assignedTo)
+            .OrderByDescending(ca => ca.AssignedAt)
             .ToListAsync(ct);
 
-        return entities.Select(MapToDto);
+        var distinctByClient = entities
+            .GroupBy(ca => ca.ClientId)
+            .Select(g => g.First())
+            .ToList();
+
+        return distinctByClient.Select(MapToDto);
     }
 
     public async Task<IEnumerable<ClientAssignmentDto>> GetAllAsync(CancellationToken ct = default)
@@ -217,5 +226,9 @@ public class ClientAssignmentService : IClientAssignmentService
         AssignedAt = e.AssignedAt,
         Status = Enum.TryParse<ClientStatus>(e.Status ?? string.Empty, ignoreCase: true, out var s) ? s : ClientStatus.Unknown,
         Notes = e.Notes
+        ,
+        ClientName = e.Client?.Name,
+        ClientEmail = e.Client?.Email,
+        ClientPhone = e.Client?.Contact
     };
 }
