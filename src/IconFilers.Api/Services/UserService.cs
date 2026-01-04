@@ -80,7 +80,7 @@ namespace IconFilers.Api.Services
                 Phone = dto.Phone?.Trim() ?? string.Empty,
                 DeskNumber = dto.DeskNumber?.Trim(),
                 WhatsAppNumber = dto.WhatsAppNumber?.Trim(),
-                Role = dto.Role?.Trim() ?? string.Empty,
+                Role = "User",
                 ReportsTo = dto.ReportsTo,
                 TeamName = dto.TeamName?.Trim(),
                 TargetAmount = dto.TargetAmount,

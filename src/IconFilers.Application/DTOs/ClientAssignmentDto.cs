@@ -16,7 +16,6 @@ namespace IconFilers.Application.DTOs
         public DateTime AssignedAt { get; set; }
         public ClientStatus Status { get; set; }
         public string? Notes { get; set; }
-        // Client contact details
         public string? ClientName { get; set; }
         public string? ClientEmail { get; set; }
         public string? ClientPhone { get; set; }
